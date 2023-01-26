@@ -28,6 +28,12 @@ let PlayerMove = -1;//Direct we want
 let RogueMyGold = 0;
 let RogueMyGems = 0;
 let RogueMyFood = 0;
+
+let CFood = 0;
+let CGold = 0;
+let CGems = 0;
+let CNPCs = 0;
+let CPLAYERS = 0;
 //****************************************************************************************************************
 //****************************************************************************************************************
 let RL_IMAGES ={
@@ -146,7 +152,7 @@ function SpawnNPC(map){
     let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
     if(RogueIsLocationOpen(map, x, y) === true){
         RID++;
-        RogueNPCs[RID] = {hp:100, damage:1, x:x, y:y, remove:false};//simple tracking data
+        RogueNPCs[RID] = {hp:100, damage:1, x:x, y:y, remove:0};//simple tracking data
         //console.log(RogueNPCs[RID]);
     }
 }
@@ -154,16 +160,22 @@ function SpawnNPC(map){
 //******************************************************************************************************************************
 function SpawnPlayer(map){
 
-    //Try until Open spot
-    for(let i=0;i<50;i++){
-        let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
-        if(RogueIsLocationOpen(map, x, y) === true){
-            RID++;
-            RoguePlayers[RID] = {hp:100, damage:1, x:x, y:y, remove:false};//simple tracking data
-            console.log(RoguePlayers[RID]);
-            return;
-        }
+    //Always Safe Zones Only to be fair
+    let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
+    let side = RogueRandInt(4);
+    if(side === 0){y = 0;}//top
+    if(side === 1){y = MAP_HEIGHT - 1;}//bottom
+    if(side === 2){x = 0;}//left
+    if(side === 3){y = MAP_WIDTH - 1;}//right
+
+    //Double check if open (no blocking)
+    if(RogueIsLocationOpen(map, x, y) === true){
+        RID++;
+        RoguePlayers[RID] = {hp:100, damage:1, x:x, y:y, dir:-1, remove:0};//simple tracking data
+        console.log(RoguePlayers[RID]);
+        return RID;
     }
+    return -1;
 }
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -199,7 +211,7 @@ function MoveNPC(npc, x, y){
             if(RoguePlayers[pid].x === x && RoguePlayers[pid].y === y){
                 RoguePlayers[pid].hp -= npc.damage;
                 //died (will need to respawn)
-                if(RoguePlayers[pid].hp < 0){ RoguePlayers[pid].hp = 0; RoguePlayers[pid].remove = true; }
+                if(RoguePlayers[pid].hp < 0){ RoguePlayers[pid].hp = 0; RoguePlayers[pid].remove = 1; }
                 //TODO show dead frame etc..
             }
         }
@@ -235,6 +247,7 @@ function RogueMapProcess(dt){
     let map = RL_MAP;
     let max_npc = 50;
     let count_npc = 0;
+    let count_player = 0;
     let max_food = 100;
     let count_food = 0;
     let max_gold = 50;//higher
@@ -242,7 +255,7 @@ function RogueMapProcess(dt){
     let max_gem = 20;//rare
     let count_gem = 0;
 
-    let x, y;
+    let x, y, dir;
 
     //Random NPC Movement or Chase Players here
     for (let nid in RogueNPCs) {
@@ -256,31 +269,18 @@ function RogueMapProcess(dt){
         }
     }
 
-    //TODO - TEST AUTO MOVE - USE INPUTS INSTEAD (direction = 0-4)
     for (let pid in RoguePlayers) {
         if (RoguePlayers.hasOwnProperty(pid)) {
             x = RoguePlayers[pid].x; y = RoguePlayers[pid].y;
-
-            //Automatic
-            if(PlayerMove === -1){
-                //let ndir = RogueRandInt(4);
-                //if(ndir === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MovePlayer(RoguePlayers[pid], x+1, y); } }
-                //if(ndir === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MovePlayer(RoguePlayers[pid], x-1, y); } }
-                //if(ndir === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MovePlayer(RoguePlayers[pid], x, y+1); } }
-                //if(ndir === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MovePlayer(RoguePlayers[pid], x, y-1); } }
-            }
-            else {//Input based
-                if(PlayerMove === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MovePlayer(RoguePlayers[pid], x+1, y); } }
-                if(PlayerMove === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MovePlayer(RoguePlayers[pid], x-1, y); } }
-                if(PlayerMove === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MovePlayer(RoguePlayers[pid], x, y+1); } }
-                if(PlayerMove === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MovePlayer(RoguePlayers[pid], x, y-1); } }
+            dir = RoguePlayers[pid].dir;
+            if(dir >= 0) {//Input based for players
+                if(dir === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MovePlayer(RoguePlayers[pid], x+1, y); } }
+                if(dir === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MovePlayer(RoguePlayers[pid], x-1, y); } }
+                if(dir === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MovePlayer(RoguePlayers[pid], x, y+1); } }
+                if(dir === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MovePlayer(RoguePlayers[pid], x, y-1); } }
             }
         }
     }
-
-    //Move Players
-    //TODO Earn Pickups (gold, food, gems)
-    //TODO Gems = Crypto Send Here
 
     //Count current
     for (x = 1; x < map.gw-1; x++) {
@@ -293,12 +293,13 @@ function RogueMapProcess(dt){
         }
     }
     count_npc = Object.keys(RogueNPCs).length;
+    count_player = Object.keys(RoguePlayers).length;
 
     //info update
-    let ss = "My Food/Gold/Gems: " + RogueMyFood + "/" + RogueMyGold + "/" + RogueMyGems;
-    let m = ss + " Map Size: " + MAP_WIDTH + "x" + MAP_HEIGHT;
-    let debug = m + " Food: " + count_food + " " + "Gold: " + count_gold + " " + "Gems: " + count_gem + " " + "NPCs: " + count_npc;
-    console.log(debug);
+    //let ss = "My Food/Gold/Gems: " + RogueMyFood + "/" + RogueMyGold + "/" + RogueMyGems;
+    //let m = ss + " Map Size: " + MAP_WIDTH + "x" + MAP_HEIGHT;
+    //let debug = m + " Food: " + count_food + " " + "Gold: " + count_gold + " " + "Gems: " + count_gem + " " + "NPCs: " + count_npc;
+    //console.log(debug);
     //$('#info').html(m + " Food: " + count_food + " " + "Gold: " + count_gold + " " + "Gems: " + count_gem + " " + "NPCs: " + count_npc);
 
     //Add more gold, gems, npcs, if < max
@@ -326,6 +327,14 @@ function RogueMapProcess(dt){
 
     //Spawn NPC (attempt)
     if(count_npc < max_npc){ SpawnNPC(map); }
+
+
+    //Stats
+    CFood = count_food;
+    CGold = count_gold;
+    CGems = count_gem;
+    CNPCs = count_npc;
+    CPLAYERS = count_player;
 
     //HTML5Draw();
     //console.log("ROGUELIKE_PROCESS");
@@ -385,44 +394,36 @@ class RogueLike {
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
-    IsRoom(index){ return index >= 0 && index < this.amt; }
+    //IsRoom(index){ return index >= 0 && index < this.amt; }
     //UpdateRoom(index, data){ if(this.IsRoom(index) === true){ this.maps[index] = data; } }
-    AddPlayer(index, pid, P){ this.players[index][pid] = P; }
-    RemovePlayer(index, pid){ this.players[index][pid].remove = 1; }
+    //AddPlayer(index, pid, P){ this.players[index][pid] = P; }
+    //RemovePlayer(index, pid){ this.players[index][pid].remove = 1; }
+    GetUpdate(){ return {npcs: RogueNPCs, players: RoguePlayers, map: RL_MAP}; }
+    Info(){
+        return {food: CFood, gold: CGold, gem: CGems, npc: CNPCs, players: CPLAYERS};
+    }
+    Spawn(){ return SpawnPlayer(RL_MAP); }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
-    SendPlayerUpdate(Group, out_data){
-        let inputs = {};
-
-        //TODO Send player inputs to game server
-        for (let key in Group) {
-            if (Group.hasOwnProperty(key)) {
-                if(Group[key].remove === 0){
-                    out_data.pid = key;
-                    Group[key].client.emit('update', out_data );
-                    if(Group[key].input !== null){ inputs[key] = Group[key].input; }
-                }
-            }
+    SetInput(pid, dir){
+        if (RoguePlayers.hasOwnProperty(pid)) {
+            RoguePlayers[pid].dir = dir;
         }
-        return inputs;
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    Disconnect(pid){
+        if (RoguePlayers.hasOwnProperty(pid)) {
+            RoguePlayers[pid].remove = 1;
+            console.log("found RM pid: " + pid);
+        }
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
     Process(dt){
         RogueMapProcess(dt);
-/*
-        let inputs_all = [];
-        for(let i=0; i < this.amt; i++){
-            let out_data = this.maps[i];
-            if(out_data !== null){
-                //console.log(Object.keys(this.players[i]));
-                let inputs = this.SendPlayerUpdate(this.players[i], out_data);
-                inputs_all.push(inputs);
-            }
-            this.RemoveGroup(this.players[i]);
-        }
-        this.client.emit('server_inputs', inputs_all );
-        */
+        this.RemoveGroup(RoguePlayers);//clean up dead player avatars
+        this.RemoveGroup(RogueNPCs);//Just in case enemies die off as well
     }
     //--------------------------------------------------------------------------------------------------------------
     // Remove from Object Group (after processing)
@@ -432,7 +433,7 @@ class RogueLike {
         for (let key in group) { if (group.hasOwnProperty(key)) { if(group[key].remove === 1){ remove.push(key); } } }
         for(let i=0; i< remove.length; i++){
             delete group[remove[i]];
-            console.log("Removed Player from GameServer: " + remove[i])
+            console.log("Removed Player or NPC: " + remove[i])
         }
     }
 

@@ -18,10 +18,10 @@ let RogueNumImages = 0;
 
 //NPCs here
 let RID=0;//global increment id
-let RogueNPCs = {}
+//let RogueNPCs = {}
 
 //TODO Track players and their locations here...etc
-let RoguePlayers = {}
+//let RoguePlayers = {}
 let PlayerMove = -1;//Direct we want
 
 //My Stats (or get from my player data later)
@@ -29,6 +29,9 @@ let RogueMyGold = 0;
 let RogueMyGems = 0;
 let RogueMyFood = 0;
 
+let SERVER_UPDATE = null;
+let WALLET = "0x000000000";
+let INFO = "";
  //****************************************************************************************************************
 //****************************************************************************************************************
 let RL_IMAGES ={
@@ -386,15 +389,18 @@ function RogueLoader(canvas, images, Callback)
     };
     LoadingimageObj.src = RogueLoadingImage;//triggers onload after done
 }
-
 //****************************************************************************************************************
 //****************************************************************************************************************
 function HTML5Draw(){
+    if(SERVER_UPDATE === null) { return; }
     RogueContext.clearRect(0, 0, 1024, 1024);
     let src = RogueImages["tiles"];
     let index, sx, sy, tx, ty;
     let STS = 16;
     let TS = 16 * ZoomView;
+    let RL_MAP = SERVER_UPDATE.map;
+    let RogueNPCs = SERVER_UPDATE.npcs;
+    let RoguePlayers = SERVER_UPDATE.players;
 
     for(let x=0;x<MAP_WIDTH;x++) {
         for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -456,24 +462,28 @@ function HTML5Draw(){
         }
     }
 
+    //UI Info
+    /*
+    //In Canvas Info
+    RogueContext.globalAlpha = 0.5;
+    RogueContext.fillStyle = "#999999";
+    RogueContext.fillRect(20, 5, 1024-40, 30);
+    RogueContext.fillStyle = "#555555";
+    RogueContext.strokeRect(20, 5, 1024-40, 30);
+
+    RogueContext.globalAlpha = 1.0;
+    RogueContext.fillStyle = "#000000";
+    RogueContext.font = "bold 12px verdana, sans-serif ";
+    //RogueContext.font = "20px Georgia";
+    RogueContext.fillText(SERVER_UPDATE.info, 40, 25);
+    */
+
 }
 //****************************************************************************************************************
 //****************************************************************************************************************
 $(document).ready(function(){
 
     SIO_READY()
-
-    /*
-    //Create Map Data
-    RL_MAP = RogueMapGenerate(MAP_WIDTH, MAP_HEIGHT, 16);
-
-    let i=0;
-    //console.log(RL_MAP);
-    //console.log(JSON.stringify(RL_MAP.tm[RL_GroundLayer]));
-    //console.log(JSON.stringify(RL_MAP.tm[RL_BlockingLayer]));
-    //console.log(JSON.stringify(RL_MAP.tm[RL_ItemsLayer]));
-    //console.log(JSON.stringify(RL_MAP.tm[RL_NPCLayer]));
-
 
     $(document).keydown(function(e){
         let key = e.keyCode;
@@ -488,15 +498,14 @@ $(document).ready(function(){
 
     });
 
-
     RogueLoader("Canvas", RL_IMAGES, ()=>{
         console.log("READY!!");
 
         $("#b_spawn").click(function () {
-
-            //TEST Spawn
-            SpawnPlayer(RL_MAP);
-
+            socket.emit('spawn');
+        });
+        $("#b_buy").click(function () {
+            socket.emit('buy');
         });
 
         //Zoom on wheel
@@ -508,9 +517,12 @@ $(document).ready(function(){
             event.preventDefault();
         }, false);
 
-        HTML5Draw();
+        //HTML5Draw();
 
-        setInterval(()=> { RogueMapProcess(); }, 500);
+        setInterval(()=> { HTML5Draw(); }, 500);
+        setInterval(()=> {
+            socket.emit('input', PlayerMove); PlayerMove  =-1;
+        }, 500);
 
         //RogueCanvas.addEventListener('mousemove', function(evt) { MouseMove(evt);}, false);
         //RogueCanvas.addEventListener('mousedown', function(evt) { MouseDown(evt);}, false);
@@ -520,11 +532,7 @@ $(document).ready(function(){
 
     });
 
-     */
 });
-
-
-
 
 
 
@@ -541,37 +549,27 @@ function SIO_READY(){
 
     socket.on("connect", () => {
         console.log(socket.id);
-//        console.log("Connected " + MyWalletAddress);
-//        socket.emit('wallet', MyWalletAddress);
+        console.log("Connected " + WALLET);
+        socket.emit('wallet', WALLET);
     });
 
     socket.on('update', (d) => {
-        //MyData = d;
+        SERVER_UPDATE = d;
 
         //Only get this once
-        //if(MyData.map){
-            //DrawMap();
-        //}
-        //console.log(d);
+        if(SERVER_UPDATE.map){ HTML5Draw(); }
+        console.log(d);
+
+        //update info
+        $('#info').html(SERVER_UPDATE.info);
+        $('#credits').html("CREDITS/LIVES: " + SERVER_UPDATE.credit);
         //console.log('message: ' + JSON.stringify(d));
     });
-    socket.on('chat', (msg) => {
+    socket.on('buy', (msg) => {
         //ServerUpdate(d);
         console.log('message: ' + msg);
-    });
-    socket.on('pid', (msg) => {
-        //ServerUpdate(d);
-        MyPID = msg;
-        console.log('PID: ' + msg);
-    });
-    socket.on('list', (msg) => {
-        MAP_COUNT = msg.maps;
-        console.log("MAPS: " + MAP_COUNT);
-//        socket.emit('join', 1);
-    });
-    socket.on('joined', (msg) => {
-        console.log(msg);
-    });
+        $('#msg').html(msg);
 
-    socket.emit('list', 1);
+    });
+    socket.on('spawn', (msg) => { $('#msg').html(msg); });
 }

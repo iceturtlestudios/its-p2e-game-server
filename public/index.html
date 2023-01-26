@@ -36,11 +36,17 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-12" style="padding: 10px;">
+            <strong><h5 id="info" style="text-align: center; padding: 5px;">...</h5></strong>
             <div class="container-canvas">
                 <canvas id="Canvas" tabindex="1" width="1024" height="1024" style="border:1px solid black;"></canvas>
             </div>
-            <div id="info" style="text-align: center; padding: 10px;">...</div>
+            <div style="text-align: center;">
+                <span id="credits" style="text-align: center; padding: 10px;">0</span> |
+                <span id="msg" style="text-align: center; padding: 10px;">...</span>
+
+            </div>
             <div id="options" style="text-align: center; padding: 10px;">
+                <button type="button" id="b_buy" class="btn btn-primary" title="spawn">Buy Credit (1 Polygon) = 10 Lives</button>
                 <button type="button" id="b_spawn" class="btn btn-primary" title="spawn">SPAWN</button>
             </div>
 
