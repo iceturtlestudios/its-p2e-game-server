@@ -1,7 +1,7 @@
 // Like Roguelike Unity https://www.youtube.com/watch?v=Fdcnt2-Jf4w
 let XOffset = 0;
 let YOffset = 0;
-let ZoomView = 2;//1;
+let ZoomView = 1;//1;
 let MAP_WIDTH = 64;
 let MAP_HEIGHT = 64;
 let RL_MAP = null;
@@ -30,12 +30,19 @@ let RogueMyGems = 0;
 let RogueMyFood = 0;
 
 let SERVER_UPDATE = null;
-let WALLET = "0x000000000";
+let WALLET = null;
+let SERVER_WALLET = null;
+let SERVER_PAYMENT = -1;
 let INFO = "";
+
+let PolygonProvider;// = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com/');
+let PolygonSigner = null;
+let StartPay = false;
  //****************************************************************************************************************
 //****************************************************************************************************************
 let RL_IMAGES ={
     tiles: "img/rogue_like.png",
+    player_hl: "img/player_hl.png",
 };
 //****************************************************************************************************************
 //****************************************************************************************************************
@@ -395,12 +402,14 @@ function HTML5Draw(){
     if(SERVER_UPDATE === null) { return; }
     RogueContext.clearRect(0, 0, 1024, 1024);
     let src = RogueImages["tiles"];
+    let player_hl = RogueImages["player_hl"];
     let index, sx, sy, tx, ty;
     let STS = 16;
     let TS = 16 * ZoomView;
     let RL_MAP = SERVER_UPDATE.map;
     let RogueNPCs = SERVER_UPDATE.npcs;
     let RoguePlayers = SERVER_UPDATE.players;
+    let PID = SERVER_UPDATE.pid;//my player id
 
     for(let x=0;x<MAP_WIDTH;x++) {
         for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -455,6 +464,12 @@ function HTML5Draw(){
     //Draw Players
     for (let pid in RoguePlayers) {
         if (RoguePlayers.hasOwnProperty(pid)) {
+            //player highlight
+            if(PID.toString() === pid){
+                tx = (RoguePlayers[pid].x - XOffset) * TS;
+                ty = (RoguePlayers[pid].y - YOffset) * TS;
+                RogueContext.drawImage(player_hl, 0,0,16,16,tx,ty,TS, TS);
+            }
             sy = Math.floor(36 / 32); sx = 36 - (sy * 32);
             tx = (RoguePlayers[pid].x - XOffset) * TS;
             ty = (RoguePlayers[pid].y - YOffset) * TS;
@@ -481,16 +496,38 @@ function HTML5Draw(){
 }
 //****************************************************************************************************************
 //****************************************************************************************************************
-$(document).ready(function(){
+async function ConnectWallet(){
+
+    if(window.ethereum && ethereum.isMetaMask){
+        PolygonProvider = new ethers.providers.Web3Provider(window.ethereum, "any")
+        PolygonProvider.on("network", (newNetwork, oldNetwork) => {
+            if (oldNetwork) {
+                window.location.reload();//Reload if we changed networks
+            }
+        });
+
+        let net = await PolygonProvider.getNetwork();
+        console.log(net.chainId);
+        if(net.chainId === 137){
+            //Only if Polygon
+            $("#requirePolygon").hide();
+            $("#connectButton").show();
+        }
+    }
+}
+//****************************************************************************************************************
+//****************************************************************************************************************
+function STARTUP(){
 
     SIO_READY()
 
+
     $(document).keydown(function(e){
         let key = e.keyCode;
-        if ( key === 37  ){ XOffset-=4;if(XOffset < 0){ XOffset = 0;} HTML5Draw(); }
-        else if (key === 38){ YOffset-=4;if(YOffset < 0){ YOffset = 0;} HTML5Draw(); }
-        else if (key === 39){ XOffset+=4; if(XOffset > MAP_WIDTH - 1){XOffset = MAP_WIDTH - 1;} HTML5Draw(); }
-        else if (key === 40){ YOffset+=4; if(YOffset > MAP_HEIGHT - 1){YOffset = MAP_HEIGHT - 1;} HTML5Draw(); }
+//        if ( key === 37  ){ XOffset-=4;if(XOffset < 0){ XOffset = 0;} HTML5Draw(); }
+//        else if (key === 38){ YOffset-=4;if(YOffset < 0){ YOffset = 0;} HTML5Draw(); }
+//        else if (key === 39){ XOffset+=4; if(XOffset > MAP_WIDTH - 1){XOffset = MAP_WIDTH - 1;} HTML5Draw(); }
+//        else if (key === 40){ YOffset+=4; if(YOffset > MAP_HEIGHT - 1){YOffset = MAP_HEIGHT - 1;} HTML5Draw(); }
         if ( key === 68  ){ PlayerMove = 0; }//d
         if ( key === 83  ){ PlayerMove = 2; }//s
         if ( key === 65  ){ PlayerMove = 1; }//a
@@ -505,10 +542,26 @@ $(document).ready(function(){
             socket.emit('spawn');
         });
         $("#b_buy").click(function () {
-            socket.emit('buy');
+            StartPayment();
+
+            //socket.emit('buy');
+
+            //const weiAmountValue = ethers.utils.parseEther(ETHAmountValue) //parseInt(ETHAmountValue) * 10**18
+
+            // Form the transaction request for sending ETH
+            //const transactionRequest = {
+            //to: addressToValue.toString(),
+            //value: weiAmountValue.toString()
+            //}
+
+            // Send the transaction and log the receipt
+            //const receipt = await signer.sendTransaction(transactionRequest);
+            //console.log(receipt);
+
         });
 
         //Zoom on wheel
+        /*
         RogueCanvas.addEventListener('wheel',function(event){
             if(event.wheelDeltaY > 0){ ZoomView += 1;if(ZoomView > 4){ZoomView = 4;}}
             else {ZoomView -= 1;if(ZoomView < 1){ZoomView = 1;}}
@@ -516,6 +569,7 @@ $(document).ready(function(){
             HTML5Draw();
             event.preventDefault();
         }, false);
+         */
 
         //HTML5Draw();
 
@@ -531,11 +585,7 @@ $(document).ready(function(){
         //RogueCanvas.addEventListener('wheel',function(event){            event.preventDefault();        }, false);
 
     });
-
-});
-
-
-
+}
 //****************************************************************************************************************
 //****************************************************************************************************************
 function SIO_READY(){
@@ -549,7 +599,7 @@ function SIO_READY(){
 
     socket.on("connect", () => {
         console.log(socket.id);
-        console.log("Connected " + WALLET);
+        //console.log("Connected " + WALLET);
         socket.emit('wallet', WALLET);
     });
 
@@ -561,15 +611,102 @@ function SIO_READY(){
         console.log(d);
 
         //update info
-        $('#info').html(SERVER_UPDATE.info);
-        $('#credits').html("CREDITS/LIVES: " + SERVER_UPDATE.credit);
+        let wttrim = WALLET.substring(0, 5) + "..." + WALLET.substring(38)
+        //$('#winfo').html("Wallet: " + wttrim);
+        SERVER_WALLET = SERVER_UPDATE.info.server_wallet;
+        SERVER_PAYMENT =  SERVER_UPDATE.info.pay_in;
+        let ref = 'https://polygonscan.com/address/' + SERVER_UPDATE.info.server_wallet;
+        delete SERVER_UPDATE.info.server_wallet;//clear it
+        $('#server_wallet').html('<a href="' + ref + '" target=_blank>' + ref + '</a>');
+        $('#info').html("SERVER INFO: " + JSON.stringify(SERVER_UPDATE.info));
+        let info2 = "<span style=\"color:dodgerblue;\">DEMO (Still in development) </span> | ";
+        info2 = info2 + '<span style="color:darkgreen;">BANK: ' + SERVER_UPDATE.info.bank + '</span> | ';
+        if(SERVER_UPDATE.cooldown >= 0){
+            info2 = info2 + '<span style="color:red;">SPAWN NOW (' + SERVER_UPDATE.cooldown + ')</span>';
+        }
+        else {
+            info2 = info2 + '<span style="color:green;">PLAY NOW!</span>';
+        }
+        info2 = info2 + " | SCORE: " + SERVER_UPDATE.score + " | ";
+        info2 = info2 + " CREDITS: " + SERVER_UPDATE.credit + " | ";
+        info2 = info2 + wttrim;
+        $('#info2').html(info2);
+
         //console.log('message: ' + JSON.stringify(d));
     });
     socket.on('buy', (msg) => {
         //ServerUpdate(d);
-        console.log('message: ' + msg);
-        $('#msg').html(msg);
+        //console.log('message: ' + msg);
+        //$('#msg').html(msg);
 
     });
     socket.on('spawn', (msg) => { $('#msg').html(msg); });
 }
+//--------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+async function getGasPrice() {
+    let mul = 1.1;
+    const price = await PolygonProvider.getGasPrice();
+    const str = ethers.utils.formatEther(price);
+    const eth = str * mul;
+    return ethers.utils.parseEther(eth.toFixed(18));
+}
+//****************************************************************************************************************
+//****************************************************************************************************************
+async function StartPayment() {
+
+    console.log(SERVER_WALLET + " " + SERVER_PAYMENT);
+    if(SERVER_WALLET && SERVER_PAYMENT > 0 && StartPay === false){
+        StartPay = true;//block multiple txns
+        let GAS = await getGasPrice();
+        console.log("GAS_PRICE: " + GAS);
+        console.log(ethers.utils.formatEther(GAS));
+        console.log("AMT: " + SERVER_PAYMENT);
+
+        //let provider = new ethers.providers.Web3Provider(window.ethereum);
+        //let signer = provider.getSigner();
+        if(PolygonSigner){
+            console.log("Sending Polygon")
+            try {
+                let tx_proc = {
+                    to: SERVER_WALLET,
+                    value: ethers.utils.parseEther(SERVER_PAYMENT),
+                    gasPrice: GAS
+                }
+                let tx = await PolygonSigner.sendTransaction(tx_proc);
+                await tx.wait();
+                console.log(tx.hash);
+                StartPay = false;//allow retry
+
+            } catch(err) {
+                console.log(err)
+                //Message("Payment Failed or Cancelled.<br>May not have enough POLYGON");
+                StartPay = false;//allow retry
+            }
+        }
+        StartPay = false;//allow retry
+    }
+}
+//****************************************************************************************************************
+//****************************************************************************************************************
+$(document).ready(function(){
+
+    $("#connectButton").click(async function () {
+        let accounts = await PolygonProvider.send("eth_requestAccounts", []);
+        WALLET = accounts[0];
+        console.log(WALLET);
+        $("#main_div").hide();
+        $("#game_div").show();
+
+        //OK to Start - We have Wallet/Polygon
+        STARTUP();
+
+        PolygonSigner = PolygonProvider.getSigner()
+        //console.log(PolygonSigner);
+        //console.log(PolygonProvider);
+
+    });
+
+
+    ConnectWallet();
+});

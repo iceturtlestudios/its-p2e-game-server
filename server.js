@@ -15,75 +15,121 @@ const NT1 = new NanoTimer();
 const NT15 = new NanoTimer();
 const NTFAST = new NanoTimer();
 
-//DB
-const mDB = require("./engine/mmysql");
+//DB if needed
+//const mDB = require("./engine/mmysql");
+//Redis if needed
+//const redis_client = REDIS.createClient({ url: process.env.REDIS });
+//redis_client.on('error', (err) => console.log('Redis Client Error', err));
+
 const EC = require("./engine/_core");
 let CORE = new EC.Core();
+
+const EPC = require("./engine/polygon");
+let PCM = new EPC.CryptoPolygon();
 
 //timing dt
 let FAST_lastUpdate = Date.now();
 let MEDIUM_lastUpdate = Date.now();
 let SLOW_lastUpdate = Date.now();
 let SAMPLE_ProcTime = 0;
-let STATS = "";
+let STATS = {};
 
-let TCOUNTER_MAX = 20;//Round Time
-let TCOUNTER = 20;//Countdown
+let ROUND_TIME = parseInt(process.env.ROUND_TIME_SECONDS);//Round Time (SECS)
+let ROUND_COOLDOWN_SECONDS = parseInt(process.env.ROUND_COOLDOWN_SECONDS);
+let TCOUNTER = ROUND_TIME;//Current Countdown (SECS)
 
 app.use(express.static('public'))
-
-//TODO Use CACHE (Future)
-//const redis_client = REDIS.createClient({ url: process.env.REDIS });
-//redis_client.on('error', (err) => console.log('Redis Client Error', err));
+//***********************************************************************************************************************
+//Helper Class
+//***********************************************************************************************************************
+class SERVER {
+    constructor() {
+        this.ACM = null;
+        this.CORE = null;
+        console.log("new SERVER Created")
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    async Init(){ }
+}
+let MServer = new SERVER();
+CORE.MServer = MServer;//Attach to CORE
+MServer.CORE = CORE;//Attach as well
 //***********************************************************************************************************************
 //***********************************************************************************************************************
 async function Init(){
     NT1.setInterval(Process_1_Seconds, '', '1s');//seconds
-    NT15.setInterval(Process_10_Seconds, '', '10s');//seconds
+    NT15.setInterval(Process_30_Seconds, '', '30s');//seconds
     NTFAST.setInterval(ProcessFAST, '', '100m');;//Normally 100m (10 times a second)
+
+    //Informational
+    await PCM.Init();
+
+    //Update Bank
+    await Process_30_Seconds();
 
     //REDIS (OPTIONAL)
     //await redis_client.connect();
 
     //MYSQL DB (OPTIONAL)
     //await mDB.Init();
-
-    console.log("[Server] Starting");
+    //TEST SEND
+    //await PCM.Send(0.10, process.env.ITS_TIP_PUB_KEY);
 }
 //***********************************************************************************************************************
 //***********************************************************************************************************************
 async function Process_1_Seconds() {
     let now = Date.now(); let dt = now - MEDIUM_lastUpdate; MEDIUM_lastUpdate = now; dt = dt / 1000;//to ms
-    CORE.Process(STATS, dt);
-    let info = CORE.RM.Info();
+    let cooldown = -1;
+    if(TCOUNTER > (ROUND_TIME - ROUND_COOLDOWN_SECONDS)){
+        cooldown = Math.abs((ROUND_TIME - ROUND_COOLDOWN_SECONDS) - TCOUNTER);
+        console.log("ON COOLDOWN - " + cooldown);
+    }
 
-    let min = Math.floor(TCOUNTER / 60);
-    let sec = TCOUNTER - (min * 60);
-    STATS = "ROUND TIMER: " + min + ":" + sec;
-    STATS = STATS + " | BANK: " + CORE.BANK;
-    STATS = STATS + " | PLAYERS: " + info.players
-    STATS = STATS + " | NPCS: " + info.npc
-    STATS = STATS + " | FOOD: " + info.food
-    STATS = STATS + " | GOLD: " + info.gold
-    STATS = STATS + " | GEMS: " + info.gem
+    let info = CORE.RM.Info();
+    info.bank = CORE.BANK;
+    info.server_wallet = process.env.SERVER_PUB_KEY;
+    info.payout = process.env.GAME_PAYOUT;
+    info.pay_in = process.env.GAME_PAYMENT;
+    let min = Math.floor(TCOUNTER / 60); let sec = TCOUNTER - (min * 60);
+    info.timer = min + ":" + sec;
+    CORE.Process(info, dt, cooldown);
 
     TCOUNTER--;
     if(TCOUNTER <= 0){
+        TCOUNTER = ROUND_TIME;//do first so no other extra payouts sent
         console.log("Process WINNER!!!!")
-        TCOUNTER = TCOUNTER_MAX
+        let winner_wallet = CORE.PM.FindWinner();
+        if(winner_wallet !== null){
+            console.log(winner_wallet);
+            await PCM.Send(process.env.GAME_PAYOUT, winner_wallet);
+        }
+        else {
+            console.log("NO WINNER FOUND (0 Scores)");
+        }
+
+        CORE.PM.ResetScores();
     }
 }
 //***********************************************************************************************************************
 //***********************************************************************************************************************
-async function Process_10_Seconds() {
+async function Process_30_Seconds() {
     let now = Date.now(); let dt = now - SLOW_lastUpdate; SLOW_lastUpdate = now; dt = dt / 1000;//to ms
 
     console.log("---------------------------------------------------------------------------");
-    console.log(STATS);
-    //console.log(STATS + " SendPerSec: " + (CORE.SENDS / 10));
-    //console.log(CORE.STATS); CORE.SENDS = 0;
-    //console.log("SampleProc: " + SAMPLE_ProcTime);
+    let info = CORE.RM.Info();
+    info.bank = CORE.BANK;
+    info.server_wallet = process.env.SERVER_PUB_KEY;
+    info.payout = process.env.GAME_PAYOUT;
+    console.log(JSON.stringify(info));
     console.log("---------------------------------------------------------------------------");
+
+    //TEST SEND
+    //await PCM.Send(0.10, process.env.ITS_TIP_PUB_KEY);
+
+    //Update BANK Balance
+    CORE.BANK = Math.round((await PCM.ServerBalance() + Number.EPSILON) * 100) / 100;//Rounded down
+
 }
 //***********************************************************************************************************************
 // FAST Game Processing (10 times a second usually)
@@ -115,3 +161,4 @@ http.listen(process.env.MY_PORT, function() {
     Init().then();
 });
 
+module.exports = MServer;

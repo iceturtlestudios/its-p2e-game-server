@@ -2,7 +2,7 @@ const UTIL = require( 'util' );
 const MYSQL = require("mysql");
 
 //Info
-console.log("[MYSQL] " + process.env.MYSQL);
+//console.log("[MYSQL] " + process.env.MYSQL);
 
 //Tracking Clients
 let mysql_default = null;

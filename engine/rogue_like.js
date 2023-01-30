@@ -1,3 +1,5 @@
+require('dotenv').config()//console.log(process.env)
+
 // Like Roguelike Unity https://www.youtube.com/watch?v=Fdcnt2-Jf4w
 let XOffset = 0;
 let YOffset = 0;
@@ -158,7 +160,7 @@ function SpawnNPC(map){
 }
 //******************************************************************************************************************************
 //******************************************************************************************************************************
-function SpawnPlayer(map){
+function SpawnPlayer(cid, map){
 
     //Always Safe Zones Only to be fair
     let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
@@ -171,8 +173,8 @@ function SpawnPlayer(map){
     //Double check if open (no blocking)
     if(RogueIsLocationOpen(map, x, y) === true){
         RID++;
-        RoguePlayers[RID] = {hp:100, damage:1, x:x, y:y, dir:-1, remove:0};//simple tracking data
-        console.log(RoguePlayers[RID]);
+        RoguePlayers[RID] = {cid:cid, hp:100, damage:1, x:x, y:y, dir:-1, remove:0};//simple tracking data
+        //console.log(RoguePlayers[RID]);
         return RID;
     }
     return -1;
@@ -220,30 +222,32 @@ function MoveNPC(npc, x, y){
 }
 //******************************************************************************************************************************
 //******************************************************************************************************************************
-function MovePlayer(player, x, y){
+function MovePlayer(core, player, x, y){
     let map = RL_MAP;
     player.x = x; player.y = y;
 
-    //TODO pickup food, item, gem
+    //Add to SCORE
     if(RogueTMGet(map.tm, RL_ItemsLayer, map.gw, x, y) === 1){
-        RogueMyFood++;
+        core.PM.GiveScore(player.cid, parseFloat(process.env.SCORE_FOOD));
         RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, 0);//clear it
     }
     if(RogueTMGet(map.tm, RL_ItemsLayer, map.gw, x, y) === 100){
-        RogueMyGold++;
+        core.PM.GiveScore(player.cid, parseFloat(process.env.SCORE_GOLD));
         RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, 0);//clear it
     }
     if(RogueTMGet(map.tm, RL_ItemsLayer, map.gw, x, y) === 1000){
-        RogueMyGems++;
+        core.PM.GiveScore(player.cid, parseFloat(process.env.SCORE_GEM));
         RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, 0);//clear it
-
-        //TODO Trigger Payout (Crypto here - Server side only)
     }
     PlayerMove = -1;//clear
 }
 //******************************************************************************************************************************
 //******************************************************************************************************************************
-function RogueMapProcess(dt){
+function RogueMapProcess(core, dt, cooldown){
+
+    //No Process if on cooldown
+    if(cooldown){ return; }
+
     let map = RL_MAP;
     let max_npc = 50;
     let count_npc = 0;
@@ -274,10 +278,10 @@ function RogueMapProcess(dt){
             x = RoguePlayers[pid].x; y = RoguePlayers[pid].y;
             dir = RoguePlayers[pid].dir;
             if(dir >= 0) {//Input based for players
-                if(dir === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MovePlayer(RoguePlayers[pid], x+1, y); } }
-                if(dir === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MovePlayer(RoguePlayers[pid], x-1, y); } }
-                if(dir === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MovePlayer(RoguePlayers[pid], x, y+1); } }
-                if(dir === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MovePlayer(RoguePlayers[pid], x, y-1); } }
+                if(dir === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MovePlayer(core, RoguePlayers[pid], x+1, y); } }
+                if(dir === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MovePlayer(core, RoguePlayers[pid], x-1, y); } }
+                if(dir === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MovePlayer(core, RoguePlayers[pid], x, y+1); } }
+                if(dir === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MovePlayer(core, RoguePlayers[pid], x, y-1); } }
             }
         }
     }
@@ -387,7 +391,9 @@ class RogueLike {
 
         //Create Map Data
         RL_MAP = RogueMapGenerate(MAP_WIDTH, MAP_HEIGHT, 16);
-        console.log(JSON.stringify(RL_MAP));
+        console.log("-------------------------------------------------");
+        console.log("RogueLike - JSON MAP DATA SIZE: " + JSON.stringify(RL_MAP).length);
+        console.log("-------------------------------------------------");
 
         //Debug
         //console.log("[GAME SERVER] " + name + " (" + amt + ") ID: " + client.id + " " + JSON.stringify([this.maps, this.players]) );
@@ -402,7 +408,7 @@ class RogueLike {
     Info(){
         return {food: CFood, gold: CGold, gem: CGems, npc: CNPCs, players: CPLAYERS};
     }
-    Spawn(){ return SpawnPlayer(RL_MAP); }
+    Spawn(cid){ return SpawnPlayer(cid, RL_MAP); }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
     SetInput(pid, dir){
@@ -420,8 +426,8 @@ class RogueLike {
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
-    Process(dt){
-        RogueMapProcess(dt);
+    Process(core, dt, cooldown){
+        RogueMapProcess(core, dt, cooldown);
         this.RemoveGroup(RoguePlayers);//clean up dead player avatars
         this.RemoveGroup(RogueNPCs);//Just in case enemies die off as well
     }

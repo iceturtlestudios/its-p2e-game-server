@@ -1,6 +1,7 @@
 const mDB = require("./mmysql");
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+require('dotenv').config()//console.log(process.env)
 
 //**********************************************************************************************************************************
 //Player Manager
@@ -18,8 +19,65 @@ class Player {
     //--------------------------------------------------------------------------------------------------------------
     PlayerDefaultData(client){
         return {
-            client:client, pid:-1, credit:0, wallet:null, input:null, remove:0
+            client:client, pid:-1, credit:0, wallet:null, score:0, input:null, remove:0
         };
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    GiveCredit(wallet, amt){
+        let gp_amount = parseFloat(process.env.GAME_PAYMENT);
+        if(amt >= gp_amount){
+            let credits = Math.floor(amt / gp_amount) * process.env.GAME_PAYMENT_LIVES;
+            console.log("CREDITS: " + credits + " " + typeof(amt));
+            for (let key in this.PLAYERS) {
+                if (this.PLAYERS.hasOwnProperty(key)) {
+                    //Find matching player - give credits
+                    console.log("CHECK: " + this.PLAYERS[key].wallet.toLowerCase() + " " + wallet.toLowerCase());
+                    if(this.PLAYERS[key].wallet.toLowerCase() === wallet.toLowerCase()){
+                        this.PLAYERS[key].credit += credits;
+                        console.log("CREDITS GRANTED: " + wallet + " " + credits);
+                        return;
+                    }
+                }
+            }
+        }
+        else { console.log("Not Enough Polygon Given") }
+
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    GiveScore(cid, amt){
+        if(this.PLAYERS.hasOwnProperty(cid)){
+            this.PLAYERS[cid].score += amt;
+            console.log("ADD SCORE " + cid + " " + amt);
+        }
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    ResetScores(){
+        for (let key in this.PLAYERS) {
+            if (this.PLAYERS.hasOwnProperty(key)) {
+                this.PLAYERS[key].score = 0;
+            }
+        }
+        console.log("RESET SCORES!");
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    FindWinner(){
+        let winner = null;
+        let top_score = 0;
+        for (let key in this.PLAYERS) {
+            if (this.PLAYERS.hasOwnProperty(key)) {
+                let P = this.PLAYERS[key];
+                if(P.score > 0 && P.score > top_score){
+                    winner = P.wallet;
+                    top_score = P.score;
+                    console.log("Found Top Score: " + winner + " " + top_score);
+                }
+            }
+        }
+        return winner;
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
@@ -46,7 +104,7 @@ class Player {
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
-    Process(stats, out_data){
+    Process(info, out_data, cooldown){
         //Cleanup Players
         this.RMGroup(this.PLAYERS);
 
@@ -55,7 +113,9 @@ class Player {
                 if(this.PLAYERS[key].remove === 0){
                     out_data.pid = this.PLAYERS[key].pid;
                     out_data.credit = this.PLAYERS[key].credit;
-                    out_data.info = stats;
+                    out_data.score = this.PLAYERS[key].score;
+                    out_data.info = info;
+                    out_data.cooldown = cooldown;
                     //console.log("UPDATE")
                     //console.log(out_data)
                     this.PLAYERS[key].client.emit('update', out_data );

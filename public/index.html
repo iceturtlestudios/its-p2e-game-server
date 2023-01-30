@@ -11,9 +11,10 @@
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
     <script type="text/javascript" src="js/framework/phaser.min.js"></script>
 
-    <!-- Editor Specific -->
-    <!--<script type="text/javascript" src="js/Math2D.js"></script>
-    <script type="text/javascript" src="js/GFX.js"></script>-->
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js" type="text/javascript">
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    </script>
+
     <script type="text/javascript" src="js/game/RogueLike.js"></script>
 <style>
     button { padding: 5px;  font-weight: bold; }
@@ -33,21 +34,43 @@
 </head>
 <body>
 
-<div class="container-fluid">
+<div id="main_div"  class="container-fluid">
     <div class="row">
         <div class="col-lg-12" style="padding: 10px;">
-            <strong><h5 id="info" style="text-align: center; padding: 5px;">...</h5></strong>
+            <div style="text-align: center; padding: 5px;"><br><br>
+                <h3>ITS - Play 2 Earn Game Template (DEMO)</h3><br><br>
+                <h3 id="requirePolygon"><strong>Please Connect to Polygon/Matic Network in Metamask First</strong></h3><br><br>
+                <button type="button" style="display: none;" id="connectButton" class="btn btn-primary" >Connect MetaMask</button><br>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="game_div" class="container-fluid" style="display: none;">
+    <div class="row">
+        <div class="col-lg-12" style="padding: 10px;">
+            <div style="text-align: center; padding: 5px;">
+
+                <strong><p id="info2">...</p></strong>
+                <!--<span id="cooldown"></span>&nbsp;|&nbsp;
+                <span id="score"></span>&nbsp;|&nbsp;
+                <span id="credits" style="text-align: center; padding: 10px;">0</span>&nbsp;|&nbsp;
+                <span id="winfo"></span>&nbsp;|&nbsp;-->
+
+            </div>
             <div class="container-canvas">
                 <canvas id="Canvas" tabindex="1" width="1024" height="1024" style="border:1px solid black;"></canvas>
             </div>
             <div style="text-align: center;">
-                <span id="credits" style="text-align: center; padding: 10px;">0</span> |
                 <span id="msg" style="text-align: center; padding: 10px;">...</span>
-
             </div>
             <div id="options" style="text-align: center; padding: 10px;">
-                <button type="button" id="b_buy" class="btn btn-primary" title="spawn">Buy Credit (1 Polygon) = 10 Lives</button>
+
+                <button type="button" id="b_buy" class="btn btn-primary" title="spawn">Buy 10 Credits (0.1 Polygon)</button>
                 <button type="button" id="b_spawn" class="btn btn-primary" title="spawn">SPAWN</button>
+                <strong><p id="info">...</p></strong>
+                <p id="server_wallet">...</p>
+
             </div>
 
         </div>

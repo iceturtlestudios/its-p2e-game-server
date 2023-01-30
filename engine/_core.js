@@ -8,12 +8,14 @@ const PM = require("./player");//Player Manager
 //**********************************************************************************************************************************
 class Core {
     constructor() {
+        this.Server = null;
         this.GAMES = {};
         this.PM = new PM.Player(this);//Player Manager
         this.RM = new RL.RogueLike();
         this.STATS = "";
         this.SENDS = 0;
-        this.BANK = 1000000;//Update to Server Wallet Balance
+        this.BANK = 0;//Update to Server Wallet Balance
+        console.log("::::INIT CORE::::")
     }
     //--------------------------------------------------------------------------------------------------------------
     // Helpers
@@ -36,13 +38,19 @@ class Core {
     GetGIDs(){ return Object.keys(this.GAMES);}
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
+    GotPayment(wallet, amt){
+        console.log("Payment IN: " + wallet + " " + amt);
+        this.PM.GiveCredit(wallet, amt);
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
     BuyCredits(client, d){
         if(this.PM.isPlayer(client) === false){ return console.log("player not connected:  " + client.id); }
         let P = this.PM.PLAYERS[client.id];
 
         //TODO Player must pay 1 Polygon to player (min) = 10 Credits
-        P.credit += 10;//TEST GIVE 10
-        P.client.emit('buy', "Purchase Successful! +10" );
+//        P.credit += 10;//TEST GIVE 10
+//        P.client.emit('buy', "Purchase Successful! +10" );
         console.log([P.client.id, P.credit]);
     }
     //--------------------------------------------------------------------------------------------------------------
@@ -53,7 +61,7 @@ class Core {
         let msg = ""
         if(P.credit <= 0){return P.client.emit('spawn', "Buy Credits First To Play" ); }
         if(P.pid >= 0){return P.client.emit('spawn', "Already Spawned" ); }
-        let sid = this.RM.Spawn();
+        let sid = this.RM.Spawn(client.id);
         if(sid >= 0){//only if successful remove credit
             P.credit -= 1; P.pid = sid;
             P.client.emit('spawn', "Spawned OK" );
@@ -72,10 +80,9 @@ class Core {
             //P.input = d;
             if(P.pid >= 0){
                 this.RM.SetInput(P.pid, d);
-                console.log([P.client.id, d]);
+                //console.log([P.client.id, d]);
             }
         }
-
 
     }
     //--------------------------------------------------------------------------------------------------------------
@@ -89,9 +96,9 @@ class Core {
     //--------------------------------------------------------------------------------------------------------------
     //Process Game Updates (to Players)
     //--------------------------------------------------------------------------------------------------------------
-    Process(stats, dt){
-        this.RM.Process(dt);
-        this.PM.Process(stats, this.RM.GetUpdate());
+    Process(info, dt, cooldown){
+        this.RM.Process(this, dt, cooldown >= 0);
+        this.PM.Process(info, this.RM.GetUpdate(), cooldown);
     }
 
 }
