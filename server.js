@@ -108,6 +108,22 @@ async function Process_1_Seconds() {
             console.log("NO WINNER FOUND (0 Scores)");
         }
 
+        //Owner and Tip Payouts (winner or not) - Only if greater than MIN here
+        //Ideally keep at least a few Polygon for fees and players to earn against
+        if(CORE.BANK > 2.0){
+            let owner_amt = parseFloat(process.env.OWNER_PUB_KEY_PERCENT) / 100;//0.10 Polygon (default)
+            let its_tip_amt = parseFloat(process.env.ITS_PUB_KEY_PERCENT) / 100;//0.05 Polygon (default)
+            console.log("BANK: " + CORE.BANK + " OWNER PAY OUT: " + owner_amt + " ITS TIP OUT: " + its_tip_amt)
+
+            //OWNER PAY FIRST!!!
+            //await PCM.Send(owner_amt, process.env.OWNER_PUB_KEY);
+
+            //ITS TIP (Optional, but supports more game development and fixes, thx!!)
+            //await PCM.Send(its_tip_amt, process.env.ITS_TIP_PUB_KEY);
+
+        }
+
+
         CORE.PM.ResetScores();
     }
 }
@@ -123,9 +139,6 @@ async function Process_30_Seconds() {
     info.payout = process.env.GAME_PAYOUT;
     console.log(JSON.stringify(info));
     console.log("---------------------------------------------------------------------------");
-
-    //TEST SEND
-    //await PCM.Send(0.10, process.env.ITS_TIP_PUB_KEY);
 
     //Update BANK Balance
     CORE.BANK = Math.round((await PCM.ServerBalance() + Number.EPSILON) * 100) / 100;//Rounded down
