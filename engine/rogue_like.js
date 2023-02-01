@@ -4,8 +4,8 @@ require('dotenv').config()//console.log(process.env)
 let XOffset = 0;
 let YOffset = 0;
 let ZoomView = 2;//1;
-let MAP_WIDTH = 64;
-let MAP_HEIGHT = 64;
+let MAP_WIDTH = 32;
+let MAP_HEIGHT = 32;
 let RL_MAP = null;
 let RogueCanvas = null;
 let RogueContext = null;
@@ -154,7 +154,7 @@ function SpawnNPC(map){
     let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
     if(RogueIsLocationOpen(map, x, y) === true){
         RID++;
-        RogueNPCs[RID] = {hp:100, damage:1, x:x, y:y, remove:0};//simple tracking data
+        RogueNPCs[RID] = {hp:100, type:RogueRandInt(4), damage:1, x:x, y:y, remove:0};//simple tracking data
         //console.log(RogueNPCs[RID]);
     }
 }

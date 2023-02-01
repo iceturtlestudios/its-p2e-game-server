@@ -2,8 +2,8 @@
 let XOffset = 0;
 let YOffset = 0;
 let ZoomView = 1;//1;
-let MAP_WIDTH = 64;
-let MAP_HEIGHT = 64;
+let MAP_WIDTH = 32;
+let MAP_HEIGHT = 32;
 let RL_MAP = null;
 let RogueCanvas = null;
 let RogueContext = null;
@@ -404,8 +404,8 @@ function HTML5Draw(){
     let src = RogueImages["tiles"];
     let player_hl = RogueImages["player_hl"];
     let index, sx, sy, tx, ty;
-    let STS = 16;
-    let TS = 16 * ZoomView;
+    let STS = 32;
+    let TS = 32 * ZoomView;
     let RL_MAP = SERVER_UPDATE.map;
     let RogueNPCs = SERVER_UPDATE.npcs;
     let RoguePlayers = SERVER_UPDATE.players;
@@ -454,7 +454,9 @@ function HTML5Draw(){
     //Draw NPCs
     for (let nid in RogueNPCs) {
         if (RogueNPCs.hasOwnProperty(nid)) {
-            sy = Math.floor(35 / 32); sx = 35 - (sy * 32);
+            let tt = RogueNPCs[nid].type + 35;
+            sy = Math.floor(tt / 32);
+            sx = tt - (sy * 32);
             tx = (RogueNPCs[nid].x - XOffset) * TS;
             ty = (RogueNPCs[nid].y - YOffset) * TS;
             RogueContext.drawImage(src, sx * STS,sy * STS,STS,STS,tx,ty,TS, TS);
