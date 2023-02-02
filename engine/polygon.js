@@ -104,4 +104,3 @@ class CryptoPolygon {
 
 }
 exports.CryptoPolygon = CryptoPolygon;
-
