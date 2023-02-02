@@ -593,9 +593,9 @@ function STARTUP(){
 function SIO_READY(){
 
     let HOST = "http://127.0.0.1:3200/";
-    //if(location.host === "dev-api.iceturtlestudios.com"){
-        //HOST = "http://dev-api.iceturtlestudios.com:3000/";
-    //}
+    if(location.host === "p2e-demo.iceturtlestudios.com"){
+        HOST = "http://p2e-demo.iceturtlestudios.com:3200/";
+    }
     console.log(HOST)
     socket = io(HOST);
 
