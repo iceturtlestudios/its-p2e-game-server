@@ -593,7 +593,7 @@ function STARTUP(){
 function SIO_READY(){
 
     let HOST = "http://127.0.0.1:3200/";
-    if(location.host === "p2e-demo.iceturtlestudios.com"){
+    if(location.host === "p2e-demo.iceturtlestudios.com:3200"){
         HOST = "http://p2e-demo.iceturtlestudios.com:3200/";
     }
     console.log(HOST)
