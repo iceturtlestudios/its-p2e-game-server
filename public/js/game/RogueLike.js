@@ -35,6 +35,7 @@ let SERVER_WALLET = null;
 let SERVER_PAYMENT = -1;
 let INFO = "";
 let EARNED = 0;
+let TIMER_C = 0;
 
 let PolygonProvider;// = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com/');
 let PolygonSigner = null;
@@ -220,9 +221,14 @@ function HTML5Draw(){
     RogueContext.fillText(pstat, 20, 30);
 
     RogueContext.fillStyle = "#0ecb05";
-    RogueContext.font = "bold 14px verdana, sans-serif ";
+    RogueContext.font = "bold 16px verdana, sans-serif ";
     //RogueContext.font = "20px Georgia";
-    RogueContext.fillText("Paid: " + EARNED, 900, 30);
+    RogueContext.fillText("Paid: " + EARNED, 900, 27);
+
+    RogueContext.fillStyle = "#ff666f";
+    RogueContext.font = "bold 16px verdana, sans-serif ";
+    RogueContext.fillText("Round Timer: " + TIMER_C, 1024/2 - 70, 27);
+
 }
 //****************************************************************************************************************
 //****************************************************************************************************************
@@ -338,6 +344,8 @@ function SIO_READY(){
             EARNED += parseFloat(SERVER_UPDATE.info.payout);
         }
         delete SERVER_UPDATE.info.last_winner;//clear it
+
+        TIMER_C = SERVER_UPDATE.info.timer;
 
         $('#server_wallet').html('<a href="' + ref + '" target=_blank>' + ref + '</a>');
         $('#info').html("SERVER INFO: " + JSON.stringify(SERVER_UPDATE.info));
