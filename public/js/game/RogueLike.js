@@ -2,8 +2,8 @@
 let XOffset = 0;
 let YOffset = 0;
 let ZoomView = 1;//1;
-let MAP_WIDTH = 32;
-let MAP_HEIGHT = 32;
+let MAP_WIDTH = 24;
+let MAP_HEIGHT = 24;
 let RL_MAP = null;
 let RogueCanvas = null;
 let RogueContext = null;
@@ -207,27 +207,30 @@ function HTML5Draw(){
     //UI Info
 
     let pstat = "HP: " + SERVER_UPDATE.hp + " Score: " + SERVER_UPDATE.score +  " Credits: " + SERVER_UPDATE.credit;
+
+    let uSize =768;
+
     //In Canvas Info
-    RogueContext.globalAlpha = 0.5;
+    RogueContext.globalAlpha = 0.7;
     RogueContext.fillStyle = "#333333";
-    RogueContext.fillRect(10, 10, 1024-20, 30);
+    RogueContext.fillRect(10, 5, uSize-20, 23);
     RogueContext.fillStyle = "#111111";
-    RogueContext.strokeRect(10, 10, 1024-20, 30);
+    RogueContext.strokeRect(10, 5, uSize-20, 23);
 
     RogueContext.globalAlpha = 1.0;
     RogueContext.fillStyle = "#FFFFFF";
     RogueContext.font = "bold 14px verdana, sans-serif ";
     //RogueContext.font = "20px Georgia";
-    RogueContext.fillText(pstat, 20, 30);
+    RogueContext.fillText(pstat, 20, 27-5);
 
     RogueContext.fillStyle = "#0ecb05";
     RogueContext.font = "bold 16px verdana, sans-serif ";
     //RogueContext.font = "20px Georgia";
-    RogueContext.fillText("Paid: " + EARNED, 900, 27);
+    RogueContext.fillText("Paid: " + EARNED, uSize-130, 27-5);
 
     RogueContext.fillStyle = "#ff666f";
     RogueContext.font = "bold 16px verdana, sans-serif ";
-    RogueContext.fillText("Round Timer: " + TIMER_C, 1024/2 - 70, 27);
+    RogueContext.fillText("Round Timer: " + TIMER_C, uSize/2 - 70, 27-5);
 
 }
 //****************************************************************************************************************
@@ -256,7 +259,6 @@ async function ConnectWallet(){
 function STARTUP(){
 
     SIO_READY()
-
 
     $(document).keydown(function(e){
         let key = e.keyCode;
@@ -352,7 +354,7 @@ function SIO_READY(){
         let info2 = "<span style=\"color:dodgerblue;\">P2E DEMO </span> | ";
         info2 = info2 + '<span style="color:darkgreen;">BANK: ' + SERVER_UPDATE.info.bank + '</span> | ';
         if(SERVER_UPDATE.cooldown >= 0){
-            info2 = info2 + '<span style="color:red;">SPAWN NOW (' + SERVER_UPDATE.cooldown + ')</span>';
+            info2 = info2 + '<span style="color:red;">PAUSED (' + SERVER_UPDATE.cooldown + ')</span>';
         }
         else {
             info2 = info2 + '<span style="color:green;">PLAY NOW!</span>';
@@ -422,6 +424,14 @@ async function StartPayment() {
 //****************************************************************************************************************
 //****************************************************************************************************************
 $(document).ready(function(){
+
+    $('#MyHelp').modal({
+        keyboard: false
+    })
+
+    $("#b_help").click(async function () {
+        $('#MyHelp').modal('show');
+    });
 
     $("#connectButton").click(async function () {
         let accounts = await PolygonProvider.send("eth_requestAccounts", []);

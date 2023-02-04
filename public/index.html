@@ -29,7 +29,7 @@
         /* This could be done in one single declaration. See the extended sample. */
         margin-right: auto;
         margin-left: auto;
-        width: 1024px;
+        width: 768px;
     }
 </style>
 </head>
@@ -52,7 +52,12 @@
         <div class="col-lg-12" style="padding: 10px;">
             <div style="text-align: center; padding: 5px;">
 
-                <strong><p id="info2">...</p></strong>
+                <strong>
+                    <button type="button" id="b_buy" class="btn btn-primary" title="spawn">Buy 10 Credits (0.1 Polygon)</button>
+                    <button type="button" id="b_spawn" class="btn btn-primary" title="spawn">SPAWN</button>
+                    <span id="info2">...</span>
+                    <button type="button" id="b_help" class="btn btn-primary" title="spawn">Help</button>
+                </strong><br>
                 <!--<span id="cooldown"></span>&nbsp;|&nbsp;
                 <span id="score"></span>&nbsp;|&nbsp;
                 <span id="credits" style="text-align: center; padding: 10px;">0</span>&nbsp;|&nbsp;
@@ -60,23 +65,54 @@
 
             </div>
             <div class="container-canvas">
-                <canvas id="Canvas" tabindex="1" width="1024" height="1024" style="border:1px solid black;"></canvas>
+                <canvas id="Canvas" tabindex="1" width="768" height="768" style="border:1px solid black;"></canvas>
             </div>
             <div style="text-align: center;">
                 <span id="msg" style="text-align: center; padding: 10px;">...</span>
             </div>
             <div id="options" style="text-align: center; padding: 10px;">
-
-                <button type="button" id="b_buy" class="btn btn-primary" title="spawn">Buy 10 Credits (0.1 Polygon)</button>
-                <button type="button" id="b_spawn" class="btn btn-primary" title="spawn">SPAWN</button>
                 <strong><p id="info" style="margin:0px;">...</p></strong>
                 <p id="server_wallet">...</p>
-
             </div>
 
         </div>
     </div>
 
+</div>
+<div class="modal modal-lg" id="MyHelp" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Help</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h3>P2E Game Template DEMO (TESTING)</h3>
+                <h4 style="color:blue;">All ITS GG Bot NFT Owners will get this Game Template</h4>
+                <h4 style="color:green;">You can adjust/customize art/code as you like!</h4>
+                <h4 style="color:orangered;">Earn income when running your own game!</h4>
+                <h4 style="color:red;">Buy in and Payouts are low for testing (0.1 MATIC)</h4>
+                <p>
+                    - Simple RogueLike GamePlay (Collect/Avoid)<br>
+                    - Players Earn by getting the highest score per round (Multiplayer) = 0.1 MATIC<br>
+                    - Owner/ITS Earn small amount/tip per round as well (Players earn the most)<br>
+                    - Buy Credits First (Credits are the same as lives)<br>
+                    - Spawn to play (at anytime)(will be random on the borders of map)<br>
+                    - Red highlighted bot is yours<br>
+                    - Use W, A, S, D to move your character (bot)<br>
+                    - Collect Food, Treasure to earn points<br>
+                    - Avoid NPC bots (only NPCs will cause damage)<br>
+                    - Respawn as needed (costs 1 credit)<br>
+                    - Buy more credits as needed<br>
+                    - At the start of the round there is a brief cooldown to spawn and plan<br>
+                    - Enjoy!<br>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 </body>

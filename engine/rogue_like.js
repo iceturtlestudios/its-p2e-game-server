@@ -1,7 +1,7 @@
 require('dotenv').config()//console.log(process.env)
 
-let MAP_WIDTH = 32;
-let MAP_HEIGHT = 32;
+let MAP_WIDTH = 24;
+let MAP_HEIGHT = 24
 let RL_MAP = null;
 
 //NPCs here
@@ -54,13 +54,13 @@ function RogueMap(gw,gh,ts){
 function RogueMapGenerate(gw, gh, ts){
     let map = RogueMap(gw,gh,ts);
 
-    let max_npc = 50;
+    let max_npc = 5;
     let count_npc = 0;
-    let max_food = 10;//Low start amounts
+    let max_food = 5;//Low start amounts
     let count_food = 0;
-    let max_gold = 10;//Low start amounts
+    let max_gold = 5;//Low start amounts
     let count_gold = 0;
-    let max_gem = 10;//Low start amounts
+    let max_gem = 5;//Low start amounts
     let count_gem = 0;
 
     //Set Random (non edge)
@@ -215,16 +215,21 @@ function RogueMapProcess(core, dt, cooldown){
     //No Process if on cooldown
     if(cooldown){ return; }
 
+    //Quick Adjustment here
+    let ADJUST = 2;
+
     let map = RL_MAP;
-    let max_npc = 50;
+    let max_npc = 50/ADJUST;
     let count_npc = 0;
     let count_player = 0;
-    let max_food = 100;
+    let max_food = 100/ADJUST;
     let count_food = 0;
-    let max_gold = 50;//higher
+    let max_gold = 50/ADJUST;//higher
     let count_gold = 0;
-    let max_gem = 20;//rare
+    let max_gem = 20/ADJUST;//rare
     let count_gem = 0;
+
+    //console.log("MAX_NPC: " + max_npc)
 
     let x, y, dir;
 
