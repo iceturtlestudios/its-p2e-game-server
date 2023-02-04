@@ -88,20 +88,29 @@ async function Process_1_Seconds() {
 
     let info = CORE.RM.Info();
     info.bank = CORE.BANK;
+    info.last_winner = CORE.LAST_WINNER;
     info.server_wallet = process.env.SERVER_PUB_KEY;
     info.payout = process.env.GAME_PAYOUT;
     info.pay_in = process.env.GAME_PAYMENT;
     let min = Math.floor(TCOUNTER / 60); let sec = TCOUNTER - (min * 60);
     info.timer = min + ":" + sec;
     CORE.Process(info, dt, cooldown);
+    CORE.LAST_WINNER = null;//clear it
 
     TCOUNTER--;
+
+    //END OF ROUND HERE
     if(TCOUNTER <= 0){
         TCOUNTER = ROUND_TIME;//do first so no other extra payouts sent
         console.log("Process WINNER!!!!")
         let winner_wallet = CORE.PM.FindWinner();
+        CORE.PM.ResetScores();//Reset
+
+        //This may cause delays to send transactions here due to "awaits"
         if(winner_wallet !== null){
+            CORE.LAST_WINNER = winner_wallet;
             console.log(winner_wallet);
+            console.log("SENDING PAYOUT: " + process.env.GAME_PAYOUT + " " + winner_wallet);
             await PCM.Send(process.env.GAME_PAYOUT, winner_wallet);
         }
         else {
@@ -115,16 +124,18 @@ async function Process_1_Seconds() {
             let its_tip_amt = process.env.ITS_TIP_PAYOUT;
             console.log("BANK: " + CORE.BANK + " OWNER PAY OUT: " + owner_amt + " ITS TIP OUT: " + its_tip_amt)
 
-            //OWNER PAY FIRST!!!
-            //await PCM.Send(process.env.OWNER_PAYOUT, process.env.OWNER_PUB_KEY);
+            //TODO - IMPORTANT - ENABLE THIS TO SEND OWNER/TIPS OUT
+            if(process.env.SEND_OWNER_AND_TIPS === "TRUE") {
+                console.log("SENDING OWNER: " + process.env.OWNER_PAYOUT + " " + process.env.OWNER_PUB_KEY);
+                await PCM.Send(process.env.OWNER_PAYOUT, process.env.OWNER_PUB_KEY);
 
-            //ITS TIP (Optional, but supports more game development and fixes, thx!!)
-            //await PCM.Send(process.env.ITS_TIP_PAYOUT, process.env.ITS_TIP_PUB_KEY);
+                //ITS TIP (Optional, but supports more game development and fixes, thx!!)
+                console.log("SENDING TIP: " + process.env.ITS_TIP_PAYOUT + " " + process.env.ITS_TIP_PUB_KEY);
+                await PCM.Send(process.env.ITS_TIP_PAYOUT, process.env.ITS_TIP_PUB_KEY);
+            }
 
         }
-
-
-        CORE.PM.ResetScores();
+        //Dont do any logic here due to "awaits"
     }
 }
 //***********************************************************************************************************************
@@ -135,6 +146,7 @@ async function Process_30_Seconds() {
     console.log("---------------------------------------------------------------------------");
     let info = CORE.RM.Info();
     info.bank = CORE.BANK;
+    info.last_winner = CORE.LAST_WINNER;
     info.server_wallet = process.env.SERVER_PUB_KEY;
     info.payout = process.env.GAME_PAYOUT;
     console.log(JSON.stringify(info));

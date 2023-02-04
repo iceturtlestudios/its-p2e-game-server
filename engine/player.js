@@ -49,7 +49,7 @@ class Player {
     Died(cid){
         if(this.PLAYERS.hasOwnProperty(cid)){
             this.PLAYERS[cid].pid = -1;
-            console.log("AVATAR DIED " + cid);
+            //console.log("AVATAR DIED " + cid);
         }
     }
     //--------------------------------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ class Player {
     GiveScore(cid, amt){
         if(this.PLAYERS.hasOwnProperty(cid)){
             this.PLAYERS[cid].score += amt;
-            console.log("ADD SCORE " + cid + " " + amt);
+            //console.log("ADD SCORE " + cid + " " + amt);
         }
     }
     //--------------------------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ class Player {
                 this.PLAYERS[key].score = 0;
             }
         }
-        console.log("RESET SCORES!");
+        //console.log("RESET SCORES!");
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ class Player {
                 if(P.score > 0 && P.score > top_score){
                     winner = P.wallet;
                     top_score = P.score;
-                    console.log("Found Top Score: " + winner + " " + top_score);
+                    //console.log("Found Top Score: " + winner + " " + top_score);
                 }
             }
         }
@@ -107,7 +107,7 @@ class Player {
         for (let key in group) { if (group.hasOwnProperty(key)) { if(group[key].remove === 1){ remove.push(key); } } }
         for(let i=0; i< remove.length; i++){
             delete group[remove[i]];
-            console.log("Removed Player from Core: " + remove[i])
+            //console.log("Removed Player from Core: " + remove[i])
         }
     }
     //--------------------------------------------------------------------------------------------------------------

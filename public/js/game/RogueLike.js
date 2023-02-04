@@ -34,6 +34,7 @@ let WALLET = null;
 let SERVER_WALLET = null;
 let SERVER_PAYMENT = -1;
 let INFO = "";
+let EARNED = 0;
 
 let PolygonProvider;// = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com/');
 let PolygonSigner = null;
@@ -218,7 +219,10 @@ function HTML5Draw(){
     //RogueContext.font = "20px Georgia";
     RogueContext.fillText(pstat, 20, 30);
 
-
+    RogueContext.fillStyle = "#0ecb05";
+    RogueContext.font = "bold 14px verdana, sans-serif ";
+    //RogueContext.font = "20px Georgia";
+    RogueContext.fillText("Paid: " + EARNED, 900, 30);
 }
 //****************************************************************************************************************
 //****************************************************************************************************************
@@ -329,6 +333,12 @@ function SIO_READY(){
         SERVER_PAYMENT =  SERVER_UPDATE.info.pay_in;
         let ref = 'https://polygonscan.com/address/' + SERVER_UPDATE.info.server_wallet;
         delete SERVER_UPDATE.info.server_wallet;//clear it
+
+        if(SERVER_UPDATE.info.last_winner === WALLET){
+            EARNED += parseFloat(SERVER_UPDATE.info.payout);
+        }
+        delete SERVER_UPDATE.info.last_winner;//clear it
+
         $('#server_wallet').html('<a href="' + ref + '" target=_blank>' + ref + '</a>');
         $('#info').html("SERVER INFO: " + JSON.stringify(SERVER_UPDATE.info));
         let info2 = "<span style=\"color:dodgerblue;\">P2E DEMO </span> | ";
@@ -339,6 +349,8 @@ function SIO_READY(){
         else {
             info2 = info2 + '<span style="color:green;">PLAY NOW!</span>';
         }
+
+
         //info2 = info2 + " | SCORE: " + SERVER_UPDATE.score + " | ";
         //info2 = info2 + " CREDITS: " + SERVER_UPDATE.credit + " | ";
         info2 = info2 + " | " + wttrim;

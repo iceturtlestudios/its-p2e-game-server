@@ -15,6 +15,7 @@ class Core {
         this.STATS = "";
         this.SENDS = 0;
         this.BANK = 0;//Update to Server Wallet Balance
+        this.LAST_WINNER = null;
         console.log("::::INIT CORE::::")
     }
     //--------------------------------------------------------------------------------------------------------------
