@@ -9,7 +9,7 @@ let RogueCanvas = null;
 let RogueContext = null;
 
 //Loading Graphics (Load first)
-let RogueLoadingImage = "img/gui/Loading.png"; //default loading image
+let RogueLoadingImage = "img/Loading.png"; //default loading image
 let RogueImageAppend = ""; //string to append to image name to force reloading
 let RogueImageSources = {};
 let RogueImages = {};
@@ -203,20 +203,21 @@ function HTML5Draw(){
     }
 
     //UI Info
-    /*
+
+    let pstat = "HP: " + SERVER_UPDATE.hp + " Score: " + SERVER_UPDATE.score +  " Credits: " + SERVER_UPDATE.credit;
     //In Canvas Info
     RogueContext.globalAlpha = 0.5;
-    RogueContext.fillStyle = "#999999";
-    RogueContext.fillRect(20, 5, 1024-40, 30);
-    RogueContext.fillStyle = "#555555";
-    RogueContext.strokeRect(20, 5, 1024-40, 30);
+    RogueContext.fillStyle = "#333333";
+    RogueContext.fillRect(10, 10, 1024-20, 30);
+    RogueContext.fillStyle = "#111111";
+    RogueContext.strokeRect(10, 10, 1024-20, 30);
 
     RogueContext.globalAlpha = 1.0;
-    RogueContext.fillStyle = "#000000";
-    RogueContext.font = "bold 12px verdana, sans-serif ";
+    RogueContext.fillStyle = "#FFFFFF";
+    RogueContext.font = "bold 14px verdana, sans-serif ";
     //RogueContext.font = "20px Georgia";
-    RogueContext.fillText(SERVER_UPDATE.info, 40, 25);
-    */
+    RogueContext.fillText(pstat, 20, 30);
+
 
 }
 //****************************************************************************************************************
@@ -268,21 +269,6 @@ function STARTUP(){
         });
         $("#b_buy").click(function () {
             StartPayment();
-
-            //socket.emit('buy');
-
-            //const weiAmountValue = ethers.utils.parseEther(ETHAmountValue) //parseInt(ETHAmountValue) * 10**18
-
-            // Form the transaction request for sending ETH
-            //const transactionRequest = {
-            //to: addressToValue.toString(),
-            //value: weiAmountValue.toString()
-            //}
-
-            // Send the transaction and log the receipt
-            //const receipt = await signer.sendTransaction(transactionRequest);
-            //console.log(receipt);
-
         });
 
         //Zoom on wheel
@@ -335,6 +321,7 @@ function SIO_READY(){
         if(SERVER_UPDATE.map){ HTML5Draw(); }
         console.log(d);
 
+
         //update info
         let wttrim = WALLET.substring(0, 5) + "..." + WALLET.substring(38)
         //$('#winfo').html("Wallet: " + wttrim);
@@ -344,7 +331,7 @@ function SIO_READY(){
         delete SERVER_UPDATE.info.server_wallet;//clear it
         $('#server_wallet').html('<a href="' + ref + '" target=_blank>' + ref + '</a>');
         $('#info').html("SERVER INFO: " + JSON.stringify(SERVER_UPDATE.info));
-        let info2 = "<span style=\"color:dodgerblue;\">DEMO (Still in development) </span> | ";
+        let info2 = "<span style=\"color:dodgerblue;\">P2E DEMO </span> | ";
         info2 = info2 + '<span style="color:darkgreen;">BANK: ' + SERVER_UPDATE.info.bank + '</span> | ';
         if(SERVER_UPDATE.cooldown >= 0){
             info2 = info2 + '<span style="color:red;">SPAWN NOW (' + SERVER_UPDATE.cooldown + ')</span>';
@@ -352,9 +339,9 @@ function SIO_READY(){
         else {
             info2 = info2 + '<span style="color:green;">PLAY NOW!</span>';
         }
-        info2 = info2 + " | SCORE: " + SERVER_UPDATE.score + " | ";
-        info2 = info2 + " CREDITS: " + SERVER_UPDATE.credit + " | ";
-        info2 = info2 + wttrim;
+        //info2 = info2 + " | SCORE: " + SERVER_UPDATE.score + " | ";
+        //info2 = info2 + " CREDITS: " + SERVER_UPDATE.credit + " | ";
+        info2 = info2 + " | " + wttrim;
         $('#info2').html(info2);
 
         //console.log('message: ' + JSON.stringify(d));

@@ -1,22 +1,8 @@
 require('dotenv').config()//console.log(process.env)
 
-// Like Roguelike Unity https://www.youtube.com/watch?v=Fdcnt2-Jf4w
-let XOffset = 0;
-let YOffset = 0;
-let ZoomView = 2;//1;
 let MAP_WIDTH = 32;
 let MAP_HEIGHT = 32;
 let RL_MAP = null;
-let RogueCanvas = null;
-let RogueContext = null;
-
-//Loading Graphics (Load first)
-let RogueLoadingImage = "img/gui/Loading.png"; //default loading image
-let RogueImageAppend = ""; //string to append to image name to force reloading
-let RogueImageSources = {};
-let RogueImages = {};
-let RogueLoadedImages = 0;//Image PreLoad Tracking
-let RogueNumImages = 0;
 
 //NPCs here
 let RID=0;//global increment id
@@ -24,12 +10,6 @@ let RogueNPCs = {}
 
 //TODO Track players and their locations here...etc
 let RoguePlayers = {}
-let PlayerMove = -1;//Direct we want
-
-//My Stats (or get from my player data later)
-let RogueMyGold = 0;
-let RogueMyGems = 0;
-let RogueMyFood = 0;
 
 let CFood = 0;
 let CGold = 0;
@@ -38,12 +18,6 @@ let CNPCs = 0;
 let CPLAYERS = 0;
 //****************************************************************************************************************
 //****************************************************************************************************************
-let RL_IMAGES ={
-    tiles: "img/rogue_like.png",
-};
-//****************************************************************************************************************
-//****************************************************************************************************************
-
 const RL_BlockingLayer = 0;
 const RL_GroundLayer = 1;
 const RL_FringeLayer = 2;
@@ -131,14 +105,6 @@ function RogueMapGenerate(gw, gh, ts){
                         count_gem++
                     }
                 }
-                //NPC - up to max
-                /*if(rng === 99){
-                    if(count_npc < max_npc){
-                        let npc = 1;//RogueRandInt(10);//TODO more monsters here
-                        RogueTMSet(map.tm, RL_NPCLayer, gw, x, y, npc);
-                        count_npc++
-                    }
-                }*/
             }
         }
     }
@@ -154,7 +120,7 @@ function SpawnNPC(map){
     let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
     if(RogueIsLocationOpen(map, x, y) === true){
         RID++;
-        RogueNPCs[RID] = {hp:100, type:RogueRandInt(4), damage:1, x:x, y:y, remove:0};//simple tracking data
+        RogueNPCs[RID] = {hp:10, type:RogueRandInt(4), damage:1, x:x, y:y, remove:0};//simple tracking data
         //console.log(RogueNPCs[RID]);
     }
 }
@@ -173,7 +139,7 @@ function SpawnPlayer(cid, map){
     //Double check if open (no blocking)
     if(RogueIsLocationOpen(map, x, y) === true){
         RID++;
-        RoguePlayers[RID] = {cid:cid, hp:100, damage:1, x:x, y:y, dir:-1, remove:0};//simple tracking data
+        RoguePlayers[RID] = {cid:cid, hp:10, damage:1, x:x, y:y, dir:-1, remove:0};//simple tracking data
         //console.log(RoguePlayers[RID]);
         return RID;
     }
@@ -205,16 +171,18 @@ function RogueIsMoveable(map, x, y){
 }
 //******************************************************************************************************************************
 //******************************************************************************************************************************
-function MoveNPC(npc, x, y){
+function MoveNPC(core, npc, x, y){
     npc.x = x; npc.y = y;
     //TODO do damage to player on touch
     for (let pid in RoguePlayers) {
         if (RoguePlayers.hasOwnProperty(pid)) {
             if(RoguePlayers[pid].x === x && RoguePlayers[pid].y === y){
+                //players take damage (will need to respawn)
                 RoguePlayers[pid].hp -= npc.damage;
-                //died (will need to respawn)
-                if(RoguePlayers[pid].hp < 0){ RoguePlayers[pid].hp = 0; RoguePlayers[pid].remove = 1; }
-                //TODO show dead frame etc..
+                if(RoguePlayers[pid].hp < 0){
+                    RoguePlayers[pid].hp = 0; RoguePlayers[pid].remove = 1;
+                    core.PM.Died(RoguePlayers[pid].cid);
+                }
             }
         }
     }
@@ -239,7 +207,6 @@ function MovePlayer(core, player, x, y){
         core.PM.GiveScore(player.cid, parseFloat(process.env.SCORE_GEM));
         RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, 0);//clear it
     }
-    PlayerMove = -1;//clear
 }
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -266,10 +233,10 @@ function RogueMapProcess(core, dt, cooldown){
         if (RogueNPCs.hasOwnProperty(nid)) {
             x = RogueNPCs[nid].x; y = RogueNPCs[nid].y;
             let ndir = RogueRandInt(4);
-            if(ndir === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MoveNPC(RogueNPCs[nid], x+1, y); } }
-            if(ndir === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MoveNPC(RogueNPCs[nid], x-1, y); } }
-            if(ndir === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MoveNPC(RogueNPCs[nid], x, y+1); } }
-            if(ndir === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MoveNPC(RogueNPCs[nid], x, y-1); } }
+            if(ndir === 0){ if(RogueIsMoveable(map, x+1, y) === true){ MoveNPC(core, RogueNPCs[nid], x+1, y); } }
+            if(ndir === 1){ if(RogueIsMoveable(map, x-1, y) === true){ MoveNPC(core, RogueNPCs[nid], x-1, y); } }
+            if(ndir === 2){ if(RogueIsMoveable(map, x, y+1) === true){ MoveNPC(core, RogueNPCs[nid], x, y+1); } }
+            if(ndir === 3){ if(RogueIsMoveable(map, x, y-1) === true){ MoveNPC(core, RogueNPCs[nid], x, y-1); } }
         }
     }
 
@@ -298,13 +265,6 @@ function RogueMapProcess(core, dt, cooldown){
     }
     count_npc = Object.keys(RogueNPCs).length;
     count_player = Object.keys(RoguePlayers).length;
-
-    //info update
-    //let ss = "My Food/Gold/Gems: " + RogueMyFood + "/" + RogueMyGold + "/" + RogueMyGems;
-    //let m = ss + " Map Size: " + MAP_WIDTH + "x" + MAP_HEIGHT;
-    //let debug = m + " Food: " + count_food + " " + "Gold: " + count_gold + " " + "Gems: " + count_gem + " " + "NPCs: " + count_npc;
-    //console.log(debug);
-    //$('#info').html(m + " Food: " + count_food + " " + "Gold: " + count_gold + " " + "Gems: " + count_gem + " " + "NPCs: " + count_npc);
 
     //Add more gold, gems, npcs, if < max
     if(count_food < max_food){
@@ -340,47 +300,7 @@ function RogueMapProcess(core, dt, cooldown){
     CNPCs = count_npc;
     CPLAYERS = count_player;
 
-    //HTML5Draw();
-    //console.log("ROGUELIKE_PROCESS");
-
 }
-//**********************************************************************************************************************************
-//**********************************************************************************************************************************
-function ShipRockCheck(GD, Ship){
-    // Check for collision of ship with asteroid
-    if (GD.Rocks.length !== 0) {
-        for(let k = 0; k < GD.Rocks.length; k++){
-            let R = GD.Rocks[k];
-            if(CircleCollision(Ship.x, Ship.y, 11, R.x, R.y, R.collisionRadius)){
-                //Ship.x = Math.floor(Math.random() * (GD.VW - 100)) + 50;//next random location
-                //Ship.y = Math.floor(Math.random() * (GD.VH - 100)) + 50;
-                Ship.velX = 0; Ship.velY = 0;
-                Ship.hp -= 1;
-                if(Ship.hp === 0){ Ship.isAlive = false; }
-                return;
-            }
-        }
-    }
-}
-
-//**********************************************************************************************************************************
-//**********************************************************************************************************************************
-function CircleCollision(p1x, p1y, r1, p2x, p2y, r2){
-    let radiusSum;
-    let xDiff;
-    let yDiff;
-
-    radiusSum = r1 + r2;
-    xDiff = p1x - p2x;
-    yDiff = p1y - p2y;
-
-    if (radiusSum > Math.sqrt((xDiff * xDiff) + (yDiff * yDiff))) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
 //**********************************************************************************************************************************
 //RogueLike Logic
 //**********************************************************************************************************************************
@@ -394,16 +314,9 @@ class RogueLike {
         console.log("-------------------------------------------------");
         console.log("RogueLike - JSON MAP DATA SIZE: " + JSON.stringify(RL_MAP).length);
         console.log("-------------------------------------------------");
-
-        //Debug
-        //console.log("[GAME SERVER] " + name + " (" + amt + ") ID: " + client.id + " " + JSON.stringify([this.maps, this.players]) );
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
-    //IsRoom(index){ return index >= 0 && index < this.amt; }
-    //UpdateRoom(index, data){ if(this.IsRoom(index) === true){ this.maps[index] = data; } }
-    //AddPlayer(index, pid, P){ this.players[index][pid] = P; }
-    //RemovePlayer(index, pid){ this.players[index][pid].remove = 1; }
     GetUpdate(){ return {npcs: RogueNPCs, players: RoguePlayers, map: RL_MAP}; }
     Info(){
         return {food: CFood, gold: CGold, gem: CGems, npc: CNPCs, players: CPLAYERS};
@@ -413,8 +326,21 @@ class RogueLike {
     //--------------------------------------------------------------------------------------------------------------
     SetInput(pid, dir){
         if (RoguePlayers.hasOwnProperty(pid)) {
-            RoguePlayers[pid].dir = dir;
+            if(RoguePlayers[pid].hp > 0){
+                RoguePlayers[pid].dir = dir;
+            }
+            else {
+                RoguePlayers[pid].dir = -1;//no movement
+            }
         }
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+    GetHP(pid){
+        if (RoguePlayers.hasOwnProperty(pid)) {
+            return RoguePlayers[pid].hp;
+        }
+        return 0;
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------

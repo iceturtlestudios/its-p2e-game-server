@@ -83,7 +83,7 @@ async function Process_1_Seconds() {
     let cooldown = -1;
     if(TCOUNTER > (ROUND_TIME - ROUND_COOLDOWN_SECONDS)){
         cooldown = Math.abs((ROUND_TIME - ROUND_COOLDOWN_SECONDS) - TCOUNTER);
-        console.log("ON COOLDOWN - " + cooldown);
+        //console.log("ON COOLDOWN - " + cooldown);
     }
 
     let info = CORE.RM.Info();
@@ -110,16 +110,16 @@ async function Process_1_Seconds() {
 
         //Owner and Tip Payouts (winner or not) - Only if greater than MIN here
         //Ideally keep at least a few Polygon for fees and players to earn against
-        if(CORE.BANK > 2.0){
-            let owner_amt = parseFloat(process.env.OWNER_PUB_KEY_PERCENT) / 100;//0.10 Polygon (default)
-            let its_tip_amt = parseFloat(process.env.ITS_PUB_KEY_PERCENT) / 100;//0.05 Polygon (default)
+        if(CORE.BANK > parseFloat(process.env.OWNER_MIN)){
+            let owner_amt = process.env.OWNER_PAYOUT;
+            let its_tip_amt = process.env.ITS_TIP_PAYOUT;
             console.log("BANK: " + CORE.BANK + " OWNER PAY OUT: " + owner_amt + " ITS TIP OUT: " + its_tip_amt)
 
             //OWNER PAY FIRST!!!
-            //await PCM.Send(owner_amt, process.env.OWNER_PUB_KEY);
+            //await PCM.Send(process.env.OWNER_PAYOUT, process.env.OWNER_PUB_KEY);
 
             //ITS TIP (Optional, but supports more game development and fixes, thx!!)
-            //await PCM.Send(its_tip_amt, process.env.ITS_TIP_PUB_KEY);
+            //await PCM.Send(process.env.ITS_TIP_PAYOUT, process.env.ITS_TIP_PUB_KEY);
 
         }
 

@@ -46,6 +46,14 @@ class Player {
     }
     //--------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
+    Died(cid){
+        if(this.PLAYERS.hasOwnProperty(cid)){
+            this.PLAYERS[cid].pid = -1;
+            console.log("AVATAR DIED " + cid);
+        }
+    }
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
     GiveScore(cid, amt){
         if(this.PLAYERS.hasOwnProperty(cid)){
             this.PLAYERS[cid].score += amt;
@@ -111,10 +119,14 @@ class Player {
         for (let key in this.PLAYERS) {
             if (this.PLAYERS.hasOwnProperty(key)) {
                 if(this.PLAYERS[key].remove === 0){
-                    out_data.pid = this.PLAYERS[key].pid;
+                    let pid = this.PLAYERS[key].pid;
+                    out_data.pid = pid;
+                    out_data.hp = 0;
+                    if(pid !== -1){ out_data.hp = this.core.RM.GetHP(pid); }//get hp if spawned
                     out_data.credit = this.PLAYERS[key].credit;
                     out_data.score = this.PLAYERS[key].score;
                     out_data.info = info;
+                    out_data.info.data_size = JSON.stringify(out_data).length;
                     out_data.cooldown = cooldown;
                     //console.log("UPDATE")
                     //console.log(out_data)
