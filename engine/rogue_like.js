@@ -259,8 +259,8 @@ function RogueMapProcess(core, dt, cooldown){
     }
 
     //Count current
-    for (x = 1; x < map.gw-1; x++) {
-        for (y = 1; y < map.gh-1; y++) {
+    for (x = 0; x < map.gw; x++) {
+        for (y = 0; y < map.gh; y++) {
             if(RogueTMGet(map.tm, RL_ItemsLayer, map.gw, x, y) === 1){ count_food++; }
             if(RogueTMGet(map.tm, RL_ItemsLayer, map.gw, x, y) === 100){ count_gold++; }
             if(RogueTMGet(map.tm, RL_ItemsLayer, map.gw, x, y) === 1000){ count_gem++; }
