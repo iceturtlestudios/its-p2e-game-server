@@ -26,9 +26,9 @@ class CryptoPolygon {
         } else { console.log("SEND POLYGON is NOT ACTIVE (No sending out yet - TEST MODE)"); }
         console.log("******************************************************************************************");
         console.log("OWNER_WALLET: " + process.env.OWNER_PUB_KEY);
-        console.log("OWNER_PERCENT: " + process.env.OWNER_PUB_KEY_PERCENT + " (%) (Your Share)");
+        console.log("OWNER_PAYOUT PER ROUND: " + process.env.OWNER_PAYOUT);
         console.log("ITS_TIP_WALLET: " + process.env.ITS_TIP_PUB_KEY);
-        console.log("ITS_PUB_KEY_PERCENT: " + process.env.ITS_PUB_KEY_PERCENT + " (%) (Ice Turtle Studios)");
+        console.log("ITS_TIP_PAYOUT PER ROUND: " + process.env.ITS_TIP_PAYOUT);
         console.log("******************************************************************************************");
         console.log("GAME ROUND TIME (SECONDS): " + process.env.ROUND_TIME_SECONDS);
         console.log("GAME PAYMENT MIN REQUIREMENT (POLYGON): " + process.env.GAME_PAYMENT);
@@ -74,8 +74,8 @@ class CryptoPolygon {
         // convert a currency unit from wei to matic
         balance = ethers.utils.formatEther(balance)
 
-        if(parseFloat(balance) < parseFloat(amount)) {
-            console.log('Not enough balance!');
+        if(parseFloat(balance) + 0.5 < parseFloat(amount)) {
+            console.log('Not enough balance to send with GAS (0.5 min)!');
             return false;
         } else {
             // Create a transaction object
