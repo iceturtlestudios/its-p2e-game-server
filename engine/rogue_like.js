@@ -136,12 +136,12 @@ function SpawnNPC(map){
 function SpawnPlayer(cid, map){
 
     //Always Safe Zones Only to be fair
-    let x = RogueRandInt(MAP_WIDTH); let y = RogueRandInt(MAP_HEIGHT);
+    let x = 0; let y = 0;
     let side = RogueRandInt(4);
-    if(side === 0){y = 0;}//top
-    if(side === 1){y = MAP_HEIGHT - 1;}//bottom
-    if(side === 2){x = 0;}//left
-    if(side === 3){y = MAP_WIDTH - 1;}//right
+    if(side === 0){x = RogueRandInt(MAP_WIDTH); y = 0;}//top
+    if(side === 1){x = RogueRandInt(MAP_WIDTH); y = MAP_HEIGHT - 1;}//bottom
+    if(side === 2){x = 0; y = RogueRandInt(MAP_HEIGHT); }//left
+    if(side === 3){x = MAP_WIDTH - 1; y = RogueRandInt(MAP_HEIGHT)}//right
 
     //Double check if open (no blocking)
     if(RogueIsLocationOpen(map, x, y) === true){

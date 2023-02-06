@@ -1,12 +1,16 @@
 // Like Roguelike Unity https://www.youtube.com/watch?v=Fdcnt2-Jf4w
 let XOffset = 0;
 let YOffset = 0;
+let PXOffset = 0;
+let PYOffset = 0;
+let JustZoomed = false;
 let ZoomView = 1;//1;
 let MAP_WIDTH = 32;
 let MAP_HEIGHT = 24;
 let RL_MAP = null;
 let RogueCanvas = null;
 let RogueContext = null;
+let LERPP = 0.1;
 
 //Loading Graphics (Load first)
 let RogueLoadingImage = "img/Loading.png"; //default loading image
@@ -40,10 +44,12 @@ let TIMER_C = 0;
 let PolygonProvider;// = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com/');
 let PolygonSigner = null;
 let StartPay = false;
+let TSS = "tiles";
  //****************************************************************************************************************
 //****************************************************************************************************************
 let RL_IMAGES ={
     tiles: "img/rogue_like.png",
+    tiles_kc: "img/rogue_like_kc.png",
     player_hl: "img/player_hl.png",
 };
 //****************************************************************************************************************
@@ -56,8 +62,7 @@ const RL_ItemsLayer = 3;
 const RL_NPCLayer = 4;
 
 function RogueRandInt(n) { return Math.floor(Math.random() * n); }
-function RogueLerp(start, end, amt)  { return (1-amt)*start+amt*end }
-
+function RogueLerp(start, end, amt)  { return (1-amt) * start + amt * end }
 //******************************************************************************************************************************
 //TILEMAPS
 //******************************************************************************************************************************
@@ -126,7 +131,7 @@ function RogueLoader(canvas, images, Callback)
 function HTML5Draw(){
     if(SERVER_UPDATE === null) { return; }
     RogueContext.clearRect(0, 0, 1024, 1024);
-    let src = RogueImages["tiles"];
+    let src = RogueImages[TSS];
     let player_hl = RogueImages["player_hl"];
     let index, sx, sy, tx, ty;
     let STS = 32;
@@ -196,11 +201,36 @@ function HTML5Draw(){
                 tx = (RoguePlayers[pid].x - XOffset) * TS;
                 ty = (RoguePlayers[pid].y - YOffset) * TS;
                 RogueContext.drawImage(player_hl, 0,0,16,16,tx,ty,TS, TS);
+
+                sy = Math.floor(36 / 32); sx = 36 - (sy * 32);
+                tx = (RoguePlayers[pid].x - XOffset) * TS;
+                ty = (RoguePlayers[pid].y - YOffset) * TS;
+                RogueContext.drawImage(src, sx * STS,sy * STS,STS,STS,tx,ty,TS, TS);
+
+                //slowly center to player (on on zoom immediate)
+                if(JustZoomed === true){
+                    PXOffset =  (RoguePlayers[pid].x - (MAP_WIDTH/2) / ZoomView);
+                    PYOffset =  (RoguePlayers[pid].y - (MAP_HEIGHT/2) / ZoomView);
+                    XOffset = PXOffset;//RogueLerp(XOffset, PXOffset, 0.1);
+                    YOffset = PYOffset;//RogueLerp(YOffset, PYOffset, 0.1);
+                    JustZoomed = false;
+                }
+                else {
+                    PXOffset =  (RoguePlayers[pid].x - (MAP_WIDTH/2) / ZoomView);
+                    PYOffset =  (RoguePlayers[pid].y - (MAP_HEIGHT/2) / ZoomView);
+                    XOffset = RogueLerp(XOffset, PXOffset, LERPP);
+                    YOffset = RogueLerp(YOffset, PYOffset, LERPP);
+                }
+                //console.log("PLAYER: " + tx + " " +  ty);
+                //RoguePlayers[pid].x
             }
-            sy = Math.floor(36 / 32); sx = 36 - (sy * 32);
-            tx = (RoguePlayers[pid].x - XOffset) * TS;
-            ty = (RoguePlayers[pid].y - YOffset) * TS;
-            RogueContext.drawImage(src, sx * STS,sy * STS,STS,STS,tx,ty,TS, TS);
+            else {
+                sy = Math.floor(36 / 32); sx = 36 - (sy * 32);
+                tx = (RoguePlayers[pid].x - XOffset) * TS;
+                ty = (RoguePlayers[pid].y - YOffset) * TS;
+                RogueContext.drawImage(src, sx * STS,sy * STS,STS,STS,tx,ty,TS, TS);
+
+            }
         }
     }
 
@@ -262,10 +292,14 @@ function STARTUP(){
 
     $(document).keydown(function(e){
         let key = e.keyCode;
-//        if ( key === 37  ){ XOffset-=4;if(XOffset < 0){ XOffset = 0;} HTML5Draw(); }
-//        else if (key === 38){ YOffset-=4;if(YOffset < 0){ YOffset = 0;} HTML5Draw(); }
-//        else if (key === 39){ XOffset+=4; if(XOffset > MAP_WIDTH - 1){XOffset = MAP_WIDTH - 1;} HTML5Draw(); }
-//        else if (key === 40){ YOffset+=4; if(YOffset > MAP_HEIGHT - 1){YOffset = MAP_HEIGHT - 1;} HTML5Draw(); }
+        //if ( key === 37  ){ XOffset-=4;if(XOffset < 0){ XOffset = 0;} HTML5Draw(); }
+        //else if (key === 38){ YOffset-=4;if(YOffset < 0){ YOffset = 0;} HTML5Draw(); }
+        //else if (key === 39){ XOffset+=4; if(XOffset > MAP_WIDTH - 1){XOffset = MAP_WIDTH - 1;} HTML5Draw(); }
+        //else if (key === 40){ YOffset+=4; if(YOffset > MAP_HEIGHT - 1){YOffset = MAP_HEIGHT - 1;} HTML5Draw(); }
+        if ( key === 39  ){ PlayerMove = 0; }//
+        if ( key === 40  ){ PlayerMove = 2; }//
+        if ( key === 37  ){ PlayerMove = 1; }//
+        if ( key === 38  ){ PlayerMove = 3; }//
         if ( key === 68  ){ PlayerMove = 0; }//d
         if ( key === 83  ){ PlayerMove = 2; }//s
         if ( key === 65  ){ PlayerMove = 1; }//a
@@ -284,19 +318,19 @@ function STARTUP(){
         });
 
         //Zoom on wheel
-        /*
         RogueCanvas.addEventListener('wheel',function(event){
             if(event.wheelDeltaY > 0){ ZoomView += 1;if(ZoomView > 4){ZoomView = 4;}}
             else {ZoomView -= 1;if(ZoomView < 1){ZoomView = 1;}}
             //console.log(ZoomView);
+            JustZoomed = true;
+            HTML5Draw();//Quick Refresh
             HTML5Draw();
             event.preventDefault();
         }, false);
-         */
 
         //HTML5Draw();
 
-        setInterval(()=> { HTML5Draw(); }, 500);
+        setInterval(()=> { HTML5Draw(); }, 100);
         setInterval(()=> {
             socket.emit('input', PlayerMove); PlayerMove  =-1;
         }, 500);
@@ -331,7 +365,7 @@ function SIO_READY(){
 
         //Only get this once
         if(SERVER_UPDATE.map){ HTML5Draw(); }
-        console.log(d);
+        //console.log(d);
 
 
         //update info
@@ -374,7 +408,14 @@ function SIO_READY(){
         //$('#msg').html(msg);
 
     });
-    socket.on('spawn', (msg) => { $('#msg').html(msg); });
+    socket.on('spawn', (msg) => {
+        $('#msg').html(msg);
+        ZoomView = 2;//Default Gameplay
+        JustZoomed = true;
+        HTML5Draw();//Quick Refresh
+        HTML5Draw();
+
+    });
 }
 //--------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
