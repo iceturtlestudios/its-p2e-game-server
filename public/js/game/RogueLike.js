@@ -2,7 +2,7 @@
 let XOffset = 0;
 let YOffset = 0;
 let ZoomView = 1;//1;
-let MAP_WIDTH = 24;
+let MAP_WIDTH = 32;
 let MAP_HEIGHT = 24;
 let RL_MAP = null;
 let RogueCanvas = null;
@@ -208,7 +208,7 @@ function HTML5Draw(){
 
     let pstat = "HP: " + SERVER_UPDATE.hp + " Score: " + SERVER_UPDATE.score +  " Credits: " + SERVER_UPDATE.credit;
 
-    let uSize =768;
+    let uSize = 1024;
 
     //In Canvas Info
     RogueContext.globalAlpha = 0.7;

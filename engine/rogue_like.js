@@ -1,6 +1,6 @@
 require('dotenv').config()//console.log(process.env)
 
-let MAP_WIDTH = 24;
+let MAP_WIDTH = 32;
 let MAP_HEIGHT = 24
 let RL_MAP = null;
 
@@ -63,6 +63,13 @@ function RogueMapGenerate(gw, gh, ts){
     let max_gem = 5;//Low start amounts
     let count_gem = 0;
 
+    //all first
+    for (let x = 0; x < map.gw; x++) {
+        for (let y = 0; y < map.gh; y++) {
+            let g1 = RogueRandInt(3);//just first 3 tiles by default (grassy etc)
+            RogueTMSet(map.tm, RL_GroundLayer, gw, x, y, g1);
+        }
+    }
     //Set Random (non edge)
     for (let x = 1; x < map.gw-1; x++) {
         for (let y = 1; y < map.gh-1; y++) {
@@ -273,21 +280,21 @@ function RogueMapProcess(core, dt, cooldown){
 
     //Add more gold, gems, npcs, if < max
     if(count_food < max_food){
-        x = RogueRandInt(MAP_WIDTH); y = RogueRandInt(MAP_HEIGHT);
+        x = RogueRandInt(MAP_WIDTH-2)+1; y = RogueRandInt(MAP_HEIGHT-2)+1;//not boundaries
         if(RogueIsLocationOpen(map, x, y) === true){
             let food = 1;//RogueRandInt(15)+1;//TODO more food options here
             RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, food);
         }
     }
     if(count_gold < max_gold){
-        x = RogueRandInt(MAP_WIDTH); y = RogueRandInt(MAP_HEIGHT);
+        x = RogueRandInt(MAP_WIDTH-2)+1; y = RogueRandInt(MAP_HEIGHT-2)+1;//not boundaries
         if(RogueIsLocationOpen(map, x, y) === true){
             let gold = 100;
             RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, gold);
         }
     }
     if(count_gem < max_gem){
-        x = RogueRandInt(MAP_WIDTH); y = RogueRandInt(MAP_HEIGHT);
+        x = RogueRandInt(MAP_WIDTH-2)+1; y = RogueRandInt(MAP_HEIGHT-2)+1;//not boundaries
         if(RogueIsLocationOpen(map, x, y) === true){
             let gem = 1000;
             RogueTMSet(map.tm, RL_ItemsLayer, map.gw, x, y, gem);
