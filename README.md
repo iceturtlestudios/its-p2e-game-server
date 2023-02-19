@@ -32,3 +32,26 @@ pm2 list
 
 ### If you have feedback or find bugs let us know, thanks!!
 - https://www.iceturtlestudios.com/contact/
+
+
+## Game Help (HTML5 - Help Button as well)
+
+P2E Game Template DEMO (TESTING)
+All ITS GG Bot NFT Owners will get this Game Template
+You can adjust/customize art/code as you like!
+Earn income when running your own game!
+Buy in and Payouts are low for testing (0.1 MATIC)
+
+- Simple RogueLike GamePlay (Collect/Avoid)
+- Players Earn by getting the highest score per round (Multiplayer) = 0.1 MATIC
+- Owner/ITS Earn small amount/tip per round as well (Players earn the most)
+- Buy Credits First (Credits are the same as lives)
+- Spawn to play (at anytime)(will be random on the borders of map)
+- Red highlighted bot is yours
+- Use W, A, S, D to move your character (bot)
+- Collect Food, Treasure to earn points
+- Avoid NPC bots (only NPCs will cause damage)
+- Respawn as needed (costs 1 credit)
+- Buy more credits as needed
+- At the start of the round there is a brief cooldown to spawn and plan
+- Enjoy!
