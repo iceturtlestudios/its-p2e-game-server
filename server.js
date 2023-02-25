@@ -119,6 +119,9 @@ async function Process_1_Seconds() {
 
         //Owner and Tip Payouts (winner or not) - Only if greater than MIN here
         //Ideally keep at least a few Polygon for fees and players to earn against
+        let BChk = (CORE.BANK > parseFloat(process.env.OWNER_MIN));
+        console.log("CHECK BANK: " + CORE.BANK + " MIN: " + parseFloat(process.env.OWNER_MIN) + " TEST: " + BChk);
+
         if(CORE.BANK > parseFloat(process.env.OWNER_MIN)){
             let owner_amt = process.env.OWNER_PAYOUT;
             let its_tip_amt = process.env.ITS_TIP_PAYOUT;
@@ -153,7 +156,13 @@ async function Process_30_Seconds() {
     console.log("---------------------------------------------------------------------------");
 
     //Update BANK Balance
-    CORE.BANK = Math.round((await PCM.ServerBalance() + Number.EPSILON) * 100) / 100;//Rounded down
+//    CORE.BANK = Math.round((await PCM.ServerBalance() + Number.EPSILON) * 100) / 100;//Rounded down
+
+    //Alchemy Instead (more accurate - Default RPC sometime gets 0 balance - BUG)
+    if(MServer.ACM){
+        CORE.BANK = Math.round((await MServer.ACM.ServerBalance() + Number.EPSILON) * 100) / 100;//Rounded down
+        console.log("UPDATE BANK = " + CORE.BANK);
+    }
 
 }
 //***********************************************************************************************************************

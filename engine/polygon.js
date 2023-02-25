@@ -54,8 +54,17 @@ class CryptoPolygon {
     async ServerBalance(){
         let w = process.env.SERVER_PUB_KEY;
         //let wallet = new ethers.Wallet(w, this.provider);
+        console.log(process.env.SERVER_PUB_KEY)
         let balance = await this.provider.getBalance(process.env.SERVER_PUB_KEY)
+        console.log("BUG == 0")
+        console.log(balance)
         balance = ethers.utils.formatEther(balance)
+        console.log(balance)
+        if(parseFloat(balance) === 0){
+            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        }
         return  parseFloat(balance)
     }
     //--------------------------------------------------------------------------------------------------------------
