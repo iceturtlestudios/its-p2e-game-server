@@ -1,5 +1,7 @@
 # Ice Turtle Studios 
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q2JHUHV)
+
 ## Play 2 Earn Game Template (P2E is optional with settings)
 
 ### Support this project by Purchasing a GG Bot Here!
