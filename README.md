@@ -3,10 +3,7 @@
 
 ## Play 2 Earn Game Template (P2E is optional with settings)
 
-### Support this project by Purchasing a GG Bot Here!
-- https://opensea.io/collection/its-gg-bots
-- https://www.iceturtlestudios.com/nft_gg_bots/mint/
- 
+
 ## In Progress (Still Under Development)   
 
 ## Requirements:
